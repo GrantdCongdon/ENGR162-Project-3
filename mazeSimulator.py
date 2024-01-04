@@ -38,23 +38,33 @@ def drawLine(event):
 # create mouse class
 class Mouse:
     # directions: up:0, right:1, down:2, left:3
-    def __init__(self, x, y):
+    def __init__(self, x, y, canvas, size=5):
         self.x = x
         self.y = y
         self.direction = 0
-        self.size = 10
+        self.size = size
         self.path = []
         self.path.append([self.x, self.y])
+        self.mouse = canvas.create_rectangle(self.x-self.size, self.y-self.size, self.x+self.size, self.y+self.size, fill="brown", outline="brown")
     def move(self):
-        if self.direction == "up":
-            self.y -= 1
-        elif self.direction == "down":
-            self.y += 1
-        elif self.direction == "left":
-            self.x -= 1
-        elif self.direction == "right":
-            self.x += 1
+        # decide which direction to move
+        if self.direction == 0:
+            moveVector = [0, -1]
+        elif self.direction == 2:
+            moveVector = [0, 1]
+        elif self.direction == 3:
+            moveVector = [-1, 0]
+        elif self.direction == 1:
+            moveVector = [1, 0]
+        else:
+            moveVector = [0, 0]
+        # increment coords in that direction
+        self.x+=moveVector[0]
+        self.y+=moveVector[1]
+        # record path of the mouse
         self.path.append([self.x, self.y])
+        # move the mouse
+        canvas.move(self.mouse, moveVector[0], moveVector[1])
     def changeDirection(self, direction):
         self.direction = direction
     def detectWall(self, wallList):
@@ -80,6 +90,11 @@ class Mouse:
 def main():
     # bind mouse click event to canvas
     canvas.bind("<Button-1>", drawLine)
+    # create mouse
+    mouse = Mouse(250, 5, canvas)
+    # create a button that moves the mouse for testing
+    moveButton = tk.Button(buttonFrame, text="Move", command=lambda: mouse.move())
+    moveButton.grid(row=0, column=1)
     # run window loop
     t.mainloop()
 if __name__ == "__main__":
