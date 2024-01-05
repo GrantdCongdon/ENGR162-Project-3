@@ -83,11 +83,22 @@ class Mouse:
                     frontWallDistance = self.y - wall[1]
                 elif (wall[1] > self.y and ((wall[1]-self.y) < backWallDistance)):
                     backWallDistance = wall[1] - self.y
+                else:
+                    frontWallDistance = 10000000
+                    backWallDistance = 10000000
             elif ((wall[1]<self.y and wall[3]>self.y) or (wall[1]>self.y and wall[3]<self.y)):
                 if (wall[0] < self.x and ((self.x-wall[0]) < rightWallDistance)):
                     leftWallDistance = self.x - wall[0]
                 elif (wall[0] > self.x and ((wall[0]-self.x) < rightWallDistance)):
                     rightWallDistance = wall[0] - self.x
+                else:
+                    rightWallDistance = 10000000
+                    leftWallDistance = 10000000
+            else:
+                frontWallDistance = 10000000
+                rightWallDistance = 10000000
+                backWallDistance = 10000000
+                leftWallDistance = 10000000
         wallDistances = [frontWallDistance, rightWallDistance, backWallDistance, leftWallDistance]
         return wallDistances
     def getMousePath(self):
@@ -96,9 +107,14 @@ class Mouse:
         return [self.x, self.y]
     # function that will navigate the mouse through the maze
     def solveMaze(self):
-        return 0
+        wallDistances = self.getWallDistances(lineList)
+        mouseData = []
+        while (wallDistances[0] < 10000000 and wallDistances[1] < 10000000 and wallDistances[3] < 10000000):
+            # maze solver algorithm
+            print("Solving Maze")
+        return mouseData
     # function that will create a map of the maze
-    def createMazeMap(self):
+    def createMazeMap(self, mouseData):
         return 0
 def main():
     # bind mouse click event to canvas
