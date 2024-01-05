@@ -41,33 +41,36 @@ class Mouse:
     def __init__(self, x, y, canvas, size=5):
         self.x = x
         self.y = y
-        self.direction = 0
         self.size = size
         self.path = []
         self.path.append([self.x, self.y])
         self.mouse = canvas.create_rectangle(self.x-self.size, self.y-self.size, self.x+self.size, self.y+self.size, fill="brown", outline="brown")
-    def move(self):
-        # decide which direction to move
-        if self.direction == 0:
-            moveVector = [0, -1]
-        elif self.direction == 2:
-            moveVector = [0, 1]
-        elif self.direction == 3:
-            moveVector = [-1, 0]
-        elif self.direction == 1:
-            moveVector = [1, 0]
-        else:
-            moveVector = [0, 0]
-        # increment coords in that direction
+        self.wallDistances = []
+    def moveUp(self):
+        moveVector = [0, -5]
         self.x+=moveVector[0]
         self.y+=moveVector[1]
-        # record path of the mouse
         self.path.append([self.x, self.y])
-        # move the mouse
         canvas.move(self.mouse, moveVector[0], moveVector[1])
-    def changeDirection(self, direction):
-        self.direction = direction
-    def detectWall(self, wallList):
+    def moveRight(self):
+        moveVector = [5, 0]
+        self.x+=moveVector[0]
+        self.y+=moveVector[1]
+        self.path.append([self.x, self.y])
+        canvas.move(self.mouse, moveVector[0], moveVector[1])
+    def moveDown(self):
+        moveVector = [0, 5]
+        self.x+=moveVector[0]
+        self.y+=moveVector[1]
+        self.path.append([self.x, self.y])
+        canvas.move(self.mouse, moveVector[0], moveVector[1])
+    def moveLeft(self):
+        moveVector = [-5, 0]
+        self.x+=moveVector[0]
+        self.y+=moveVector[1]
+        self.path.append([self.x, self.y])
+        canvas.move(self.mouse, moveVector[0], moveVector[1])
+    def getWallDistances(self, wallList):
         # find the distance between whatever wall is to the left of the mouse
         # assume that the mouse is a squeare
         frontWallDistance = 10000000
@@ -87,14 +90,35 @@ class Mouse:
                     rightWallDistance = wall[0] - self.x
         wallDistances = [frontWallDistance, rightWallDistance, backWallDistance, leftWallDistance]
         return wallDistances
+    def getMousePath(self):
+        return self.path
+    def getMouseCoords(self):
+        return [self.x, self.y]
+    # function that will navigate the mouse through the maze
+    def solveMaze(self):
+        return 0
+    # function that will create a map of the maze
+    def createMazeMap(self):
+        return 0
 def main():
     # bind mouse click event to canvas
     canvas.bind("<Button-1>", drawLine)
+    # create buttons to move mouse
+    t.bind("<Up>", lambda event: mouse.moveUp())
+    t.bind("<Right>", lambda event: mouse.moveRight())
+    t.bind("<Down>", lambda event: mouse.moveDown())
+    t.bind("<Left>", lambda event: mouse.moveLeft())
     # create mouse
-    mouse = Mouse(250, 5, canvas)
-    # create a button that moves the mouse for testing
-    moveButton = tk.Button(buttonFrame, text="Move", command=lambda: mouse.move())
-    moveButton.grid(row=0, column=1)
+    mouse = Mouse(250, 475, canvas)
+    # create button that will print out the wall distances
+    wallButton = tk.Button(buttonFrame, text="Wall", command=lambda: print(mouse.getWallDistances(lineList)))
+    wallButton.grid(row=0, column=1)
+    # create button that will print mouse path
+    pathButton = tk.Button(buttonFrame, text="Path", command=lambda: print(mouse.getMousePath()))
+    pathButton.grid(row=0, column=2)
+    # button that will start the maze solver
+    solveButton = tk.Button(buttonFrame, text="Solve", command=lambda: mouse.solveMaze())
+    solveButton.grid(row=0, column=3)
     # run window loop
     t.mainloop()
 if __name__ == "__main__":
