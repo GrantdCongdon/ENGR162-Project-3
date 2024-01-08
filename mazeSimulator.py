@@ -3,6 +3,7 @@ import tkinter as tk
 finishLine = False
 xCoord = 0
 yCoord = 0
+goalInfo = []
 # create empty list that will include all the lines
 lineList = []
 # create canvas
@@ -38,7 +39,46 @@ def drawLine(event):
 # create goal
 def placeGoal(event):
     goal = canvas.create_rectangle(event.x-50, event.y, event.x+50, event.y+20, fill="red", outline="red")
-    return [event.x-25, event.y, event.x+25, event.y+10, goal]
+    goalInfo = [event.x-50, event.y, event.x+50, event.y+20, goal]
+def my_max_by_weight(sequence):
+    if not sequence:
+        raise ValueError('empty sequence')
+    maximum = sequence[0]
+    for item in sequence:
+        # Compare elements by their weight stored in their second element.
+        if item[1] > maximum[1]:
+            maximum = item
+    return maximum
+def my_min_by_weight(sequence):
+    if not sequence:
+        raise ValueError('empty sequence')
+    minimum = sequence[0]
+    for item in sequence:
+        # Compare elements by their weight stored in their second element.
+        if item[1] < minimum[1]:
+            minimum = item
+    return minimum
+def resolveMaze():
+    # take the lines and connect them to the edge of the canvas
+    # select the 4 points that are closest to the canvas edge
+    pointList = []
+    for line in lineList:
+        pointList.append([line[0], line[1]])
+        pointList.append([line[2], line[3]])
+    closestPoints = []
+    for i in range(2):
+        closestPoints.append(my_max_by_weight(pointList))
+        pointList.remove(my_max_by_weight(pointList))
+        closestPoints.append(my_min_by_weight(pointList))
+        pointList.remove(my_min_by_weight(pointList))
+        
+    for point in closestPoints:
+        if (point[1] < 250):
+            canvas.create_line(point[0], point[1], point[0], 0, width=3, fill="white")
+            lineList.append([point[0], point[1], point[0], 0])
+        else:
+            canvas.create_line(point[0], point[1], point[0], 500, width=3, fill="white")
+            lineList.append([point[0], point[1], point[0], 500])
 # create mouse class
 class Mouse:
     # directions: up:0, right:1, down:2, left:3
@@ -107,65 +147,17 @@ class Mouse:
         return self.path
     def getMouseCoords(self):
         return [self.x, self.y]
+    # function that will create a map of the maze
+    def createMazeMap(self, mouseData):
+        return 0
     # function that will navigate the mouse through the maze
     def solveMaze(self):
         wallDistances = self.getWallDistances(lineList)
         mouseData = []
-        while (wallDistances[0] < 10000000 and wallDistances[1] < 10000000 and wallDistances[3] < 10000000):
+        while (not (self.x < goalInfo[0] and self.x > goalInfo[2] and self.y < goalInfo[1] and self.y > goalInfo[3])):
             # maze solver algorithm
             print("Solving Maze")
         return mouseData
-    # function that will create a map of the maze
-    def createMazeMap(self, mouseData):
-        return 0
-def my_max_by_weight(sequence):
-    if not sequence:
-        raise ValueError('empty sequence')
-
-    maximum = sequence[0]
-
-    for item in sequence:
-        # Compare elements by their weight stored
-        # in their second element.
-        if item[1] > maximum[1]:
-            maximum = item
-
-    return maximum
-def my_min_by_weight(sequence):
-    if not sequence:
-        raise ValueError('empty sequence')
-
-    minimum = sequence[0]
-
-    for item in sequence:
-        # Compare elements by their weight stored
-        # in their second element.
-        if item[1] < minimum[1]:
-            minimum = item
-
-    return minimum
-def resolveMaze():
-    # take the lines and connect them to the edge of the canvas
-    # select the 4 points that are closest to the canvas edge
-    pointList = []
-    for line in lineList:
-        pointList.append([line[0], line[1]])
-        pointList.append([line[2], line[3]])
-    closestPoints = []
-    for i in range(2):
-        closestPoints.append(my_max_by_weight(pointList))
-        pointList.remove(my_max_by_weight(pointList))
-        closestPoints.append(my_min_by_weight(pointList))
-        pointList.remove(my_min_by_weight(pointList))
-        
-    for point in closestPoints:
-        if (point[1] < 250):
-            canvas.create_line(point[0], point[1], point[0], 0, width=3, fill="white")
-            lineList.append([point[0], point[1], point[0], 0])
-        else:
-            canvas.create_line(point[0], point[1], point[0], 500, width=3, fill="white")
-            lineList.append([point[0], point[1], point[0], 500])
-
 def main():
     global resolveMaze
     # bind mouse click event to canvas
