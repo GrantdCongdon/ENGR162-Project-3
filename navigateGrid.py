@@ -9,8 +9,8 @@ bp = brickpi3.BrickPi3()
 bp.reset_all()
 
 # paramter constants for the program
-rightMotor = bp.PORT_A
-leftMotor = bp.PORT_D
+rightMotor = bp.PORT_D
+leftMotor = bp.PORT_A
 
 motorSpeed = -200
 
@@ -43,35 +43,18 @@ def getTurnDifferential():
 	dist3 = gp.ultrasonicRead(distanceSensor3)
 	return [dist1, dist2, dist3]
 
-def followWall():
-	# dist[0] is the rear sensor and dist[1] is the upper sensor
-	while True:
-		try:
-			dists = getTurnDifferential()
-			print(f"Rear sensor: {dists[0]}\tUpper sensor: {dists[1]}\tFront sensor: {dists[2]}")
-			if (dists[1]<=15):
-				turnRobot(0, -100)
-			elif dists[0]<dists[1]-1:
-				turnRobot(-100, 0)
-				print("Turning right")
-			elif dists[1]<dists[0]-1:
-				turnRobot(0, -100)
-				print("Turning left")
-			else:
-				driveForward(motorSpeed)
-				print("Going straight")
-			
-			if (dists[2] < 15):
-				if (dists[1]<15):
-					turn(90, 4)
-				else:
-					turn(-90, 4)
+def moveUnitForward():
+	bp.reset_all()
+	while (bp.get_motor_encoder(bp.PORT_A)+bp.get_motor_encoder(bp.PORT_D)< 2112):
+		driveForward(motorSpeed)
+	stopMotors()
 
-		except KeyboardInterrupt:
-			stopMotors()
-			sleep(0.1)
-			bp.reset_all()
-			break
+def moveUnitForward2(gain):
+	bp.reset_all()
+	while (bp.get_motor_encoder(bp.PORT_A)+bp.get_motor_encoder(bp.PORT_D) < 2112):
+		motorSpeed = (bp.get_motor_encoder(bp.PORT_A)+bp.get_motor_encoder(bp.PORT_D) - 2112)*gain
+		driveForward(motorSpeed)
+	stopMotors()
 
 def turn(degrees, gain):
 	bp.reset_all()
