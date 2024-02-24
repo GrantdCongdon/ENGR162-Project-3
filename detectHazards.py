@@ -20,8 +20,7 @@ mpu = MPU9250()
 
 def getIMUData():
     mag = 0
-    while (mag==0):
-        mag = mpu.readMagnet()["z"]
+    while (mag==0): mag = mpu.readMagnet()["z"]
     return abs(mag)
 
 def main():
