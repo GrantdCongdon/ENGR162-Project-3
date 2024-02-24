@@ -179,61 +179,56 @@ def getMagnetHazard():
 def goToPoint(startCoords, endCoords, orientation):
 	currentPosition = [startCoords[0], startCoords[1]]
 	while currentPosition != endCoords:
-		if (currentPosition[0]<endCoords[0]):
-			if (orientation != 1):
-				turn(90*(1-orientation), 4)
-			if (not getIrHazard() and not getMagnetHazard()):
-				moveUnitForward2(0.2)
-				currentPosition[0] += 1
-			else:
-				turn(-90, 4)
-				moveUnitForward2(0.2)
-				currentPosition[1] += 1
-		elif (currentPosition[1]<endCoords[1]):
-			if (orientation != 0):
-				turn(-90*(orientation), 4)
-			if (not getIrHazard() and not getMagnetHazard()):
-				moveUnitForward2(0.2)
-				currentPosition[1] += 1
-			else:
-				turn(-90, 4)
-				moveUnitForward2(0.2)
-				currentPosition[0] += 1
-		elif (currentPosition[0]>endCoords[0]):
-			if (orientation != 3):
-				turn(90*(3-orientation), 4)
-			if (not getIrHazard() and not getMagnetHazard()):
-				moveUnitForward2(0.2)
-				currentPosition[0] -= 1
-			else:
-				turn(90, 4)
-				moveUnitForward2(0.2)
-				currentPosition[1] += 1
-		elif (currentPosition[1]>endCoords[1]):
-			if (orientation != 2):
-				turn(90*(2-orientation), 4)
-			if (not getIrHazard() and not getMagnetHazard()):
-				moveUnitForward2(0.2)
-				currentPosition[1] -= 1
-			else:
-				turn(90, 4)
-				moveUnitForward2(0.2)
-				currentPosition[0] += 1
-	return [currentPosition, orientation]
+		try:
+			if (currentPosition[0]<endCoords[0]):
+				if (orientation != 1):
+					turn(90*(1-orientation), 4)
+				if (not getIrHazard() and not getMagnetHazard()):
+					moveUnitForward2(0.2)
+					currentPosition[0] += 1
+				else:
+					turn(-90, 4)
+					moveUnitForward2(0.2)
+					currentPosition[1] += 1
+			elif (currentPosition[1]<endCoords[1]):
+				if (orientation != 0):
+					turn(-90*(orientation), 4)
+				if (not getIrHazard() and not getMagnetHazard()):
+					moveUnitForward2(0.2)
+					currentPosition[1] += 1
+				else:
+					turn(-90, 4)
+					moveUnitForward2(0.2)
+					currentPosition[0] += 1
+			elif (currentPosition[0]>endCoords[0]):
+				if (orientation != 3):
+					turn(90*(3-orientation), 4)
+				if (not getIrHazard() and not getMagnetHazard()):
+					moveUnitForward2(0.2)
+					currentPosition[0] -= 1
+				else:
+					turn(90, 4)
+					moveUnitForward2(0.2)
+					currentPosition[1] += 1
+			elif (currentPosition[1]>endCoords[1]):
+				if (orientation != 2):
+					turn(90*(2-orientation), 4)
+				if (not getIrHazard() and not getMagnetHazard()):
+					moveUnitForward2(0.2)
+					currentPosition[1] -= 1
+				else:
+					turn(90, 4)
+					moveUnitForward2(0.2)
+					currentPosition[0] += 1
+		except KeyboardInterrupt:
+			stopMotors()
+			sleep(0.1)
+			bp.reset_all()
+			break
+		sleep(1)
 
 if __name__ == "__main__":
 	startingPosition = input("Enter starting position in coordinate form: ")[1:-2].split(",")
-	endPosition1 = input("Enter end position 1 in coordinate form: ")[1:-2].split(",")
-	endPosition2 = input("Enter end position 2 in coordinate form: ")[1:-2].split(",")
-	endPosition3 = input("Enter end position 3 in coordinate form: ")[1:-2].split(",")
-	endPosition4 = input("Enter end position 4 in coordinate form: ")[1:-2].split(",")
+	endPosition = input("Enter end position in coordinate form: ")[1:-2].split(",")
 	orientation = input("Enter orientation: ")
-
-	endValues = goToPoint(startingPosition, endPosition1, orientation)
-	input()
-	endValues = goToPoint(endValues[0], endPosition2, endValues[1])
-	input()
-	endValues = goToPoint(endValues[0], endPosition3, endValues[1])
-	input()
-	endValues = goToPoint(endValues[0], endPosition4, endValues[1])
-	input()
+	goToPoint()

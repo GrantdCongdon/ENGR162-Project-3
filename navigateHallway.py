@@ -43,15 +43,15 @@ def getTurnDifferential():
 	dist3 = gp.ultrasonicRead(distanceSensor3)
 	return [dist1, dist2, dist3]
 
-def followWall(gain):
+def followWall(dist, gain):
 	# dist[0] is the rear sensor and dist[1] is the upper sensor
 	while True:
 		try:
 			dists = getTurnDifferential()
-			print(f"Rear sensor: {dists[0]}\tUpper sensor: {dists[1]}\tFront sensor: {dists[2]}")
-			wallError = (dists[1] - 15)*gain
+			print(f"Rear sensor: {dists[0]}\t\tUpper sensor: {dists[1]}\tFront sensor: {dists[2]}")
+			wallError = (dists[1] - dist)*gain
 			tiltError = (dists[1] - dists[0])*gain
-			turnRobot(motorSpeed-tiltError-wallError, motorSpeed+tiltError+wallError)
+			turnRobot(motorSpeed+tiltError+wallError, motorSpeed-tiltError-wallError)
 			"""if (dists[1]<=10):
 				turnRobot(0, -100)
 			elif dists[0]<dists[1]-1:
@@ -85,7 +85,10 @@ def turn(degrees, gain):
 		try:
 			gyroValue = bp.get_sensor(bp.PORT_3)[0]
 		except brickpi3.SensorError:
+			print("Calibrating Gyro")
 			continue
+	print(gyroValue)
+	sleep(5)
 	if (gyroValue < degrees):
 		rightTurnSpeed = 100
 		leftTurnSpeed = -100
@@ -94,8 +97,8 @@ def turn(degrees, gain):
 				gyroValue = bp.get_sensor(bp.PORT_3)[0]
 				print(gyroValue)
 				error = degrees - gyroValue
-				rightTurnSpeed = error*gain
-				leftTurnSpeed = -1*error*gain
+				rightTurnSpeed = -1*error*gain
+				leftTurnSpeed = error*gain
 				
 				turnRobot(rightTurnSpeed, leftTurnSpeed)
 				sleep(0.1)
@@ -127,4 +130,7 @@ def turn(degrees, gain):
 	sleep(0.1)
 
 if __name__ == "__main__":
-    followWall()
+	# gain of 10 works well
+	dist = int(input("Distance from wall: "))
+	gain = int(input("Gain: "))
+	followWall(dist, gain)
