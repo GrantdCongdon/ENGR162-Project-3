@@ -130,42 +130,6 @@ def turn(degrees, gain):
 			sleep(0.1)
 			bp.reset_all()
 			break
-	"""if (gyroValue < degrees):
-		rightTurnSpeed = 100
-		leftTurnSpeed = -100
-		while (gyroValue < degrees):
-			try:
-				gyroValue = bp.get_sensor(bp.PORT_3)[0]
-				print(gyroValue)
-				error = degrees - gyroValue
-				rightTurnSpeed = error*gain
-				leftTurnSpeed = -1*error*gain
-				
-				turnRobot(rightTurnSpeed, leftTurnSpeed)
-				sleep(0.1)
-			except KeyboardInterrupt:
-				stopMotors()
-				sleep(0.1)
-				bp.reset_all()
-				break
-	else:
-		rightTurnSpeed = -100
-		leftTurnSpeed = 100
-		while (gyroValue < degrees):
-			try:
-				gyroValue = bp.get_sensor(bp.PORT_3)[0]
-				print(gyroValue)
-				error = degrees - gyroValue
-				rightTurnSpeed = -1*error*gain
-				leftTurnSpeed = error*gain
-				
-				turnRobot(rightTurnSpeed, leftTurnSpeed)
-				sleep(0.1)
-			except KeyboardInterrupt:
-				stopMotors()
-				sleep(0.1)
-				bp.reset_all()
-				break"""
 
 	stopMotors()
 	sleep(0.1)
