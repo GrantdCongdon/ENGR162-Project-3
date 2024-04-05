@@ -6,8 +6,10 @@ from time import sleep
 
 # class that covers all the aspects of the ENGR161/162 robot
 class MazeRobot(BrickPi3, MPU9250, gp):
+    # class that defines the map of the maze
     class Map:
         def __init__(self, teamNumber, mapNumber, unitLength, unit, origin, map, notes=""):
+            # initializes the map with the team number, map number, unit length, unit, notes, origin, and map
             self.teamNumber = teamNumber
             self.mapNumber = mapNumber
             self.unitLength = unitLength
@@ -16,6 +18,7 @@ class MazeRobot(BrickPi3, MPU9250, gp):
             self.origin = origin
             self.map = map
         
+        # overrides the string method to print out the map
         def __str__(self):
             basicInfo = f"Team Number: {self.teamNumber}\nMap Number: {self.mapNumber}\nUnit Length: {self.unitLength}\nUnit: {self.unit}\nOrigin: {self.origin}\nNotes: {self.notes}\n"
             mapInfo = ""
@@ -24,6 +27,7 @@ class MazeRobot(BrickPi3, MPU9250, gp):
                     mapInfo += f"{cell}, "
                 mapInfo += "\n"
             return basicInfo + mapInfo
+    
     # defines the default motor speed to go forward at
     motorSpeed = -200
     
@@ -51,10 +55,9 @@ class MazeRobot(BrickPi3, MPU9250, gp):
     exitedMaze = False
 
     # intakes the default ports for the motors, ultrasonics, gyro, and IR sensor
-    def __init__(self, rightMotorPort, leftMotorPort,
-                 frontAlignDistanceSensorPort, rearAlignDistanceSensorPort,
-                 frontDistanceSensorPort, gyroPort, irPort, coords, mazeSize,
-                 orientation=0):
+    def __init__(self, rightMotorPort, leftMotorPort, frontAlignDistanceSensorPort, rearAlignDistanceSensorPort, frontDistanceSensorPort,
+                 gyroPort, irPort, coords, mazeSize, orientation=0):
+
         # initializes the brickpi3, MPU9250, and grovepi
         super().__init__()
         
@@ -302,7 +305,11 @@ class MazeRobot(BrickPi3, MPU9250, gp):
             self.turn(90)
             self.moveUnitForward()
             self.orientation = 0
+        
+        # update the coordinates
         self.coords[1] += 1
+        
+        # check for hazards and walls and update the maze
         if (self.getIrHazard()): self.setMazeValue(self.coords[0], self.coords[1], 2)
         elif (self.getMagnetHazard()): self.setMazeValue(self.coords[0], self.coords[1], 3)
         elif (not (self.getFrontWall() or self.getLeftWall())):
@@ -326,7 +333,11 @@ class MazeRobot(BrickPi3, MPU9250, gp):
             self.turn(180)
             self.moveUnitForward()
             self.orientation = 1
+        
+        # update the coordinates
         self.coords[0] += 1
+        
+        # check for hazards and walls and update the maze
         if (self.getIrHazard()): self.setMazeValue(self.coords[0], self.coords[1], 2)
         elif (self.getMagnetHazard()): self.setMazeValue(self.coords[0], self.coords[1], 3)
         elif (not (self.getFrontWall() or self.getLeftWall())):
@@ -350,7 +361,11 @@ class MazeRobot(BrickPi3, MPU9250, gp):
             self.turn(-90)
             self.moveUnitForward()
             self.orientation = 2
+        
+        # update the coordinates
         self.coords[1] -= 1
+        
+        # check for hazards and walls and update the maze
         if (self.getIrHazard()): self.setMazeValue(self.coords[0], self.coords[1], 2)
         elif (self.getMagnetHazard()): self.setMazeValue(self.coords[0], self.coords[1], 3)
         elif (not (self.getFrontWall() or self.getLeftWall())):
@@ -374,7 +389,11 @@ class MazeRobot(BrickPi3, MPU9250, gp):
             self.moveUnitForward()
             self.orientation = 3
         else: self.moveUnitForward()
+        
+        # update the coordinates
         self.coords[0] -= 1
+        
+        # check for hazards and walls and update the maze
         if (self.getIrHazard()): self.setMazeValue(self.coords[0], self.coords[1], 2)
         elif (self.getMagnetHazard()): self.setMazeValue(self.coords[0], self.coords[1], 3)
         elif (not (self.getFrontWall() or self.getLeftWall())):
