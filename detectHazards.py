@@ -23,6 +23,9 @@ def getIMUData():
     while (mag==0): mag = mpu.readMagnet()["z"]
     return abs(mag)
 
+def getIRData():
+    return gp.analogRead(2)
+
 def main():
     while True:
         try:

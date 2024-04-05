@@ -74,6 +74,9 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         self.orientation = orientation
         self.maze = [[0 for _ in range(mazeSize[0])] for _ in range(mazeSize[1])]
         self.setMazeValue(self.startCoords[0], self.startCoords[1], 5)
+
+        # configure grovepi
+        self.set_bus("RPI_1")
         
         # configure gyro sensor
         self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
