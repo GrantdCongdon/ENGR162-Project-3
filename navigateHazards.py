@@ -133,8 +133,10 @@ def turn(degrees, gain):
 
 	stopMotors()
 	sleep(0.1)
+
 def getIrHazard():
 	return (gp.analogRead(2) >= 25)
+
 def getMagnetHazard():
 	mag = 0
 	while (mag==0): mag = mpu.readMagnet()["z"]
