@@ -6,7 +6,10 @@ from time import sleep
 from math import pi
 
 # class that covers all the aspects of the ENGR161/162 robot
-class MazeRobot(BrickPi3, MPU9250, gp):
+class MazeRobot(BrickPi3):
+    # define IMU
+    imu = MPU9250()
+    
     # class that defines the map of the maze
     class Map:
         def __init__(self, teamNumber, mapNumber, unitLength, unit, origin, map, notes=""):
@@ -39,7 +42,7 @@ class MazeRobot(BrickPi3, MPU9250, gp):
     motorSpeed = -200
 
     # define default cargo motor speed
-    cargoMotorSpeed = 90
+    cargoMotorSpeed = -90
     
     # defines the default proportional gain for driving and turning
     driveProportionalGain = 0.5
@@ -56,7 +59,7 @@ class MazeRobot(BrickPi3, MPU9250, gp):
     encoderDistance = (360/(2*pi*wheelDiameter)) * unitDistance
 
     # encoder distance to deploy cargo
-    cargoEncoderDistance = 180
+    cargoEncoderDistance = 200
 
     # default distance for wall alignment
     wallDistance=10
@@ -68,8 +71,8 @@ class MazeRobot(BrickPi3, MPU9250, gp):
     exitedMaze = False
 
     # intakes the default ports for the motors, ultrasonics, gyro, and IR sensor
-    def __init__(self, rightMotorPort, leftMotorPort, cargoPort, frontAlignDistanceSensorPort, rearAlignDistanceSensorPort, frontDistanceSensorPort,
-                 gyroPort, irPort, coords, mazeSize, orientation=0):
+    def __init__(self, rightMotorPort: int, leftMotorPort: int, cargoPort: int, frontAlignDistanceSensorPort: int, rearAlignDistanceSensorPort: int,
+                 frontDistanceSensorPort: int, gyroPort: int, irPort: int, coords: list, mazeSize: list, orientation=0):
 
         # initializes the brickpi3, MPU9250, and grovepi
         super().__init__()
@@ -90,7 +93,7 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         self.setMazeValue(self.startCoords[0], self.startCoords[1], 5)
 
         # configure grovepi
-        self.set_bus("RPI_1")
+        gp.set_bus("RPI_1")
         
         # configure gyro sensor
         self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
@@ -159,31 +162,34 @@ class MazeRobot(BrickPi3, MPU9250, gp):
     
     # gets the distances measured by each ultrasonic sensor
     def getDistances(self):
-        frontAlignDistance = self.ultrasonicRead(self.frontAlignDistanceSensorPort)
-        rearAlignDistance = self.ultrasonicRead(self.rearAlignDistanceSensorPort)
-        frontDistanceSensor = self.ultrasonicRead(self.frontDistanceSensorPort)
+        frontAlignDistance = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
+        rearAlignDistance = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
+        frontDistanceSensor = gp.ultrasonicRead(self.frontDistanceSensorPort)
         return [frontAlignDistance , rearAlignDistance, frontDistanceSensor]
     
     # returns whether a IR hazard is detected
     def getIrHazard(self):
-        return (self.analogRead(self.irPort)>=self.irHazardThreshold)
+        return (gp.analogRead(self.irPort)>=self.irHazardThreshold)
 
     # returns whether a magnet hazard is detected
     def getMagnetHazard(self):
         mag = 0
-        while (mag==0): mag = self.readMagnet()["z"]
+        while (mag==0): mag = self.imu.readMagnet()["z"]
         return (mag >= self.magnetHazardThreshold)
     
     # returns the orientation of the robot
-    def getOrientation(self):
+    @property
+    def heading(self):
         return self.orientation
     
     # returns the coordinates of the robot
-    def getCoords(self):
+    @property
+    def location(self):
         return self.coords
     
     # returns the start coordinates of the robot
-    def getStartCoords(self):
+    @property
+    def startLocation(self):
         return self.startCoords
     
     def getMaze(self, teamNumber, mapNumber, unitLength, unit, notes=""):
@@ -208,8 +214,8 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         self.offset_motor_encoder(self.leftMotorPort,
                                   self.get_motor_encoder(self.leftMotorPort))
         # calculate the average reading on an encoder (should be 0 for this one)
-        averageEncoderReading = (self.get_motor_encoder(self.rightMotorPort)+
-                                 self.get_motor_encoder(self.leftMotorPort))/2
+        averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
+                                 self.get_motor_encoder(self.leftMotorPort))/2)
 
         # while the average encoder reading is less than the distance
         while (averageEncoderReading<self.encoderDistance):
@@ -235,8 +241,8 @@ class MazeRobot(BrickPi3, MPU9250, gp):
                     self.setMotorSpeeds(self.motorSpeed, self.motorSpeed)
                 
                 # calculate the average encoder reading
-                averageEncoderReading = (self.get_motor_encoder(self.rightMotorPort)+
-                                         self.get_motor_encoder(self.leftMotorPort))/2
+                averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
+                                         self.get_motor_encoder(self.leftMotorPort))/2)
             # stop the robot if a keyboard interrupt is detected
             except KeyboardInterrupt:
                 self.stopMotors()
@@ -319,7 +325,7 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         self.offset_motor_encoder(self.cargoPort, self.get_motor_encoder(self.cargoPort))
 
         # read the encoder value for the cargo motor
-        cargoEncoderReading = self.get_motor_encoder(self.cargoPort)
+        cargoEncoderReading = abs(self.get_motor_encoder(self.cargoPort))
 
         while (cargoEncoderReading<self.cargoEncoderDistance):
             try:
@@ -327,7 +333,7 @@ class MazeRobot(BrickPi3, MPU9250, gp):
                 self.set_motor_dps(self.cargoPort, self.cargoMotorSpeed)
                 
                 # read the encoder value
-                cargoEncoderReading = self.get_motor_encoder(self.cargoPort)
+                cargoEncoderReading = abs(self.get_motor_encoder(self.cargoPort))
             
             except KeyboardInterrupt:
                 self.set_motor_power(self.cargoPort, 0)
