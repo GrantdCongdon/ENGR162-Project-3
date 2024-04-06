@@ -3,9 +3,13 @@ import grovepi as gp
 from brickpi3 import BrickPi3, SensorError
 from MPU9250 import MPU9250
 from time import sleep
+from math import pi
 
 # class that covers all the aspects of the ENGR161/162 robot
-class MazeRobot(BrickPi3, MPU9250, gp):
+class MazeRobot(BrickPi3):
+    # define IMU
+    imu = MPU9250()
+    
     # class that defines the map of the maze
     class Map:
         def __init__(self, teamNumber, mapNumber, unitLength, unit, origin, map, notes=""):
@@ -28,8 +32,17 @@ class MazeRobot(BrickPi3, MPU9250, gp):
                 mapInfo += "\n"
             return basicInfo + mapInfo
     
+    # define wheel diameter of the robot
+    wheelDiameter = 4.2
+
+    # define distance of 1 unit
+    unitDistance = 40
+
     # defines the default motor speed to go forward at
     motorSpeed = -200
+
+    # define default cargo motor speed
+    cargoMotorSpeed = -90
     
     # defines the default proportional gain for driving and turning
     driveProportionalGain = 0.5
@@ -43,7 +56,10 @@ class MazeRobot(BrickPi3, MPU9250, gp):
     magnetHazardThreshold = 50
 
     # encoder distance for 1 unit
-    encoderDistance = 1056
+    encoderDistance = (360/(2*pi*wheelDiameter)) * unitDistance
+
+    # encoder distance to deploy cargo
+    cargoEncoderDistance = 200
 
     # default distance for wall alignment
     wallDistance=10
@@ -55,8 +71,8 @@ class MazeRobot(BrickPi3, MPU9250, gp):
     exitedMaze = False
 
     # intakes the default ports for the motors, ultrasonics, gyro, and IR sensor
-    def __init__(self, rightMotorPort, leftMotorPort, frontAlignDistanceSensorPort, rearAlignDistanceSensorPort, frontDistanceSensorPort,
-                 gyroPort, irPort, coords, mazeSize, orientation=0):
+    def __init__(self, rightMotorPort: int, leftMotorPort: int, cargoPort: int, frontAlignDistanceSensorPort: int, rearAlignDistanceSensorPort: int,
+                 frontDistanceSensorPort: int, gyroPort: int, irPort: int, coords: list, mazeSize: list, orientation=0):
 
         # initializes the brickpi3, MPU9250, and grovepi
         super().__init__()
@@ -64,6 +80,7 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         # takes parameters and assigns them to the class
         self.rightMotorPort = rightMotorPort
         self.leftMotorPort = leftMotorPort
+        self.cargoPort = cargoPort
         self.frontAlignDistanceSensorPort = frontAlignDistanceSensorPort
         self.rearAlignDistanceSensorPort = rearAlignDistanceSensorPort
         self.frontDistanceSensorPort = frontDistanceSensorPort
@@ -76,7 +93,7 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         self.setMazeValue(self.startCoords[0], self.startCoords[1], 5)
 
         # configure grovepi
-        self.set_bus("RPI_1")
+        gp.set_bus("RPI_1")
         
         # configure gyro sensor
         self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
@@ -130,44 +147,61 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         self.set_motor_dps(self.leftMotorPort, leftMotorSpeed)
         return
     
+    # set a value for a maze cell
     def setMazeValue(self, x, y, value):
         y = len(self.maze)-y-1
         self.maze[y][x] = value
         return
     
+    # set the wheel diameter
+    def setWheelDiameter(self, diameter):
+        self.wheelDiameter = diameter
+        # encoder distance for 1 unit
+        self.encoderDistance = (360/(2*pi*self.wheelDiameter)) * self.unitDistance
+        return
+    
     # gets the distances measured by each ultrasonic sensor
     def getDistances(self):
-        frontAlignDistance = self.ultrasonicRead(self.frontAlignDistanceSensorPort)
-        rearAlignDistance = self.ultrasonicRead(self.rearAlignDistanceSensorPort)
-        frontDistanceSensor = self.ultrasonicRead(self.frontDistanceSensorPort)
+        frontAlignDistance = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
+        rearAlignDistance = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
+        frontDistanceSensor = gp.ultrasonicRead(self.frontDistanceSensorPort)
         return [frontAlignDistance , rearAlignDistance, frontDistanceSensor]
     
     # returns whether a IR hazard is detected
     def getIrHazard(self):
-        return (self.analogRead(self.irPort)>=self.irHazardThreshold)
+        return (gp.analogRead(self.irPort)>=self.irHazardThreshold)
 
     # returns whether a magnet hazard is detected
     def getMagnetHazard(self):
         mag = 0
-        while (mag==0): mag = self.readMagnet()["z"]
+        while (mag==0): mag = self.imu.readMagnet()["z"]
         return (mag >= self.magnetHazardThreshold)
     
     # returns the orientation of the robot
-    def getOrientation(self):
+    @property
+    def heading(self):
         return self.orientation
     
     # returns the coordinates of the robot
-    def getCoords(self):
+    @property
+    def location(self):
         return self.coords
     
     # returns the start coordinates of the robot
-    def getStartCoords(self):
+    @property
+    def startLocation(self):
         return self.startCoords
     
     def getMaze(self, teamNumber, mapNumber, unitLength, unit, notes=""):
         self.map = self.Map(teamNumber, mapNumber, unitLength, unit, self.startCoords, self.maze, notes)
         return self.map
     
+    def getFrontWall(self):
+        return (self.getDistances()[2]<=self.wallDetectThreshold)
+    
+    def getLeftWall(self):
+        return (self.getDistances()[0]<=self.wallDetectThreshold)
+
     def stopMotors(self):
         self.set_motor_power(self.rightMotorPort+self.leftMotorPort, 0)
         return
@@ -180,8 +214,8 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         self.offset_motor_encoder(self.leftMotorPort,
                                   self.get_motor_encoder(self.leftMotorPort))
         # calculate the average reading on an encoder (should be 0 for this one)
-        averageEncoderReading = (self.get_motor_encoder(self.rightMotorPort)+
-                                 self.get_motor_encoder(self.leftMotorPort))/2
+        averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
+                                 self.get_motor_encoder(self.leftMotorPort))/2)
 
         # while the average encoder reading is less than the distance
         while (averageEncoderReading<self.encoderDistance):
@@ -207,8 +241,8 @@ class MazeRobot(BrickPi3, MPU9250, gp):
                     self.setMotorSpeeds(self.motorSpeed, self.motorSpeed)
                 
                 # calculate the average encoder reading
-                averageEncoderReading = (self.get_motor_encoder(self.rightMotorPort)+
-                                         self.get_motor_encoder(self.leftMotorPort))/2
+                averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
+                                         self.get_motor_encoder(self.leftMotorPort))/2)
             # stop the robot if a keyboard interrupt is detected
             except KeyboardInterrupt:
                 self.stopMotors()
@@ -286,27 +320,45 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         self.stopMotors()
         return
     
-    def getFrontWall(self):
-        return (self.getDistances()[2]<=self.wallDetectThreshold)
-    
-    def getLeftWall(self):
-        return (self.getDistances()[0]<=self.wallDetectThreshold)
+    def depositCargo(self):
+        # reset cargo encoder
+        self.offset_motor_encoder(self.cargoPort, self.get_motor_encoder(self.cargoPort))
+
+        # read the encoder value for the cargo motor
+        cargoEncoderReading = abs(self.get_motor_encoder(self.cargoPort))
+
+        while (cargoEncoderReading<self.cargoEncoderDistance):
+            try:
+                # set the motor speed
+                self.set_motor_dps(self.cargoPort, self.cargoMotorSpeed)
+                
+                # read the encoder value
+                cargoEncoderReading = abs(self.get_motor_encoder(self.cargoPort))
+            
+            except KeyboardInterrupt:
+                self.set_motor_power(self.cargoPort, 0)
+                sleep(0.1)
+                self.reset_all()
+                break
+
+        self.set_motor_power(self.cargoPort, 0)
+        return
     
     # moves the robot "north"
-    def moveNorth(self):
+    def moveNorth(self, wallAlign=True):
         # check the orientation and turn/move accordingly
-        if (self.orientation==0): self.moveUnitForward()
+        if (self.orientation==0): self.moveUnitForward(wallAlign)
         elif (self.orientation==1):
             self.turn(-90)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 0
         elif (self.orientation==2):
             self.turn(180)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 0
         else:
             self.turn(90)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 0
         
         # update the coordinates
@@ -322,19 +374,19 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         return
     
     # same thing for the east
-    def moveEast(self):
+    def moveEast(self, wallAlign=True):
         if (self.orientation==0):
             self.turn(90)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 1
-        elif (self.orientation==1): self.moveUnitForward()
+        elif (self.orientation==1): self.moveUnitForward(wallAlign)
         elif (self.orientation==2):
             self.turn(-90)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 1
         else:
             self.turn(180)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 1
         
         # update the coordinates
@@ -350,19 +402,19 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         return
     
     # and the south
-    def moveSouth(self):
+    def moveSouth(self, wallAlign=True):
         if (self.orientation==0):
             self.turn(180)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 2
         elif (self.orientation==1):
             self.turn(90)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 2
-        elif (self.orientation==2): self.moveUnitForward()
+        elif (self.orientation==2): self.moveUnitForward(wallAlign)
         else:
             self.turn(-90)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 2
         
         # update the coordinates
@@ -378,20 +430,20 @@ class MazeRobot(BrickPi3, MPU9250, gp):
         return
     
     # and the west
-    def moveWest(self):
+    def moveWest(self, wallAlign=True):
         if (self.orientation==0):
             self.turn(-90)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 3
         elif (self.orientation==1):
             self.turn(180)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 3
         elif (self.orientation==2):
             self.turn(90)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 3
-        else: self.moveUnitForward()
+        else: self.moveUnitForward(wallAlign)
         
         # update the coordinates
         self.coords[0] -= 1
