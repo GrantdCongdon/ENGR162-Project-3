@@ -5,7 +5,7 @@ def main():
     while True:
         try:
             command = input("Enter a command: ")
-            if command == "w": robot.moveNorth(wallAlign=False)
+            if command == "w": robot.moveNorth(wallAlign=True)
             elif command == "s": robot.moveSouth(wallAlign=False)
             elif command == "a": robot.moveWest(wallAlign=False)
             elif command == "d": robot.moveEast(wallAlign=False)
