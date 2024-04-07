@@ -239,7 +239,7 @@ class MazeRobot(BrickPi3):
     def startLocation(self):
         return self.startCoords
     
-    def getMaze(self, teamNumber, mapNumber, unitLength, unit, notes=""):
+    def getMap(self, teamNumber: int, mapNumber: int, unitLength:int , unit: str, notes=""):
         self.map = self.Map(teamNumber, mapNumber, unitLength, unit, self.startCoords, self.maze, self.hazards, notes)
         return self.map
     
@@ -392,8 +392,12 @@ class MazeRobot(BrickPi3):
         self.set_motor_power(self.cargoPort, 0)
         return
     
+    # moves the robot to the center of the cell
     def moveCenter(self):
+        # get the front distance
         frontDistance = self.getDistances()[2]
+
+        # move the robot to the center of the cell
         if (frontDistance>self.centerDistance):
             while (frontDistance>self.centerDistance):
                 try:
@@ -417,6 +421,7 @@ class MazeRobot(BrickPi3):
 
         self.stopMotors()
         return
+    
     # moves the robot "north"
     def moveNorth(self, wallAlign=True):
         # check the orientation and turn/move accordingly
