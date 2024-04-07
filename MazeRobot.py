@@ -110,7 +110,7 @@ class MazeRobot(BrickPi3):
 
     # intakes the default ports for the motors, ultrasonics, gyro, and IR sensor
     def __init__(self, rightMotorPort: int, leftMotorPort: int, cargoPort: int, frontAlignDistanceSensorPort: int, rearAlignDistanceSensorPort: int,
-                 frontDistanceSensorPort: int, gyroPort: int, irPort: int, coords: list, mazeSize: list, orientation=0):
+                 frontDistanceSensorPort: int, rightDistancePort: int, gyroPort: int, irPort: int, coords: list, mazeSize: list, orientation=0):
 
         # initializes the brickpi3, MPU9250, and grovepi
         super().__init__()
@@ -122,6 +122,7 @@ class MazeRobot(BrickPi3):
         self.frontAlignDistanceSensorPort = frontAlignDistanceSensorPort
         self.rearAlignDistanceSensorPort = rearAlignDistanceSensorPort
         self.frontDistanceSensorPort = frontDistanceSensorPort
+        self.rightDistancePort = rightDistancePort
         self.gyroPort = gyroPort
         self.irPort = irPort
         self.coords = coords
@@ -211,25 +212,6 @@ class MazeRobot(BrickPi3):
         self.encoderDistance = (360/(2*pi*self.wheelDiameter)) * self.unitDistance
         return
     
-    # gets the distances measured by each ultrasonic sensor
-    def getDistances(self):
-        frontAlignDistance = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
-        while (frontAlignDistance >= 30): frontAlignDistance = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
-        rearAlignDistance = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
-        while (rearAlignDistance >= 30): rearAlignDistance = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
-        frontDistanceSensor = gp.ultrasonicRead(self.frontDistanceSensorPort)
-        return [frontAlignDistance , rearAlignDistance, frontDistanceSensor]
-    
-    # returns whether a IR hazard is detected
-    def getIrHazard(self):
-        return (gp.analogRead(self.irPort)>=self.irHazardThreshold)
-
-    # returns whether a magnet hazard is detected
-    def getMagnetHazard(self):
-        mag = 0
-        while (mag==0): mag = self.imu.readMagnet()["z"]
-        return (mag >= self.magnetHazardThreshold)
-    
     # returns the orientation of the robot
     @property
     def heading(self):
@@ -244,6 +226,30 @@ class MazeRobot(BrickPi3):
     @property
     def startLocation(self):
         return self.startCoords
+
+    # gets the distances measured by each ultrasonic sensor
+    def getDistances(self):
+        frontAlignDistance = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
+        while (frontAlignDistance >= 30): frontAlignDistance = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
+        rearAlignDistance = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
+        while (rearAlignDistance >= 30): rearAlignDistance = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
+        frontDistance = gp.ultrasonicRead(self.frontDistanceSensorPort)
+        rightDistance = None
+        while rightDistance is None:
+            try: rightDistance = self.get_sensor(self.rightDistancePort)[0]
+            except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
+            except (SensorError): continue
+        return [frontAlignDistance , rearAlignDistance, frontDistance, rightDistance]
+    
+    # returns whether a IR hazard is detected
+    def getIrHazard(self):
+        return (gp.analogRead(self.irPort)>=self.irHazardThreshold)
+
+    # returns whether a magnet hazard is detected
+    def getMagnetHazard(self):
+        mag = 0
+        while (mag==0): mag = self.imu.readMagnet()["z"]
+        return (mag >= self.magnetHazardThreshold)
     
     def getMap(self, teamNumber: int, mapNumber: int, unitLength:int , unit: str, notes="None"):
         print(self.startCoords)
