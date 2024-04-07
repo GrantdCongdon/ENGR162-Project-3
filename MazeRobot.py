@@ -37,7 +37,7 @@ class MazeRobot(BrickPi3):
             return self.__str__()
         
         # function that converts the map into a string then writes it to a file
-        def mapToCSV(self, fileName: str):
+        def toCSV(self, fileName: str):
             csvString = ""
 
             # loop through each line of the export string and add a comma if necessary
@@ -257,10 +257,26 @@ class MazeRobot(BrickPi3):
         return self.map
     
     def getFrontWall(self):
-        return (self.getDistances()[2]<=self.wallDetectThreshold)
+        if (self.orientation==0): return (self.getDistances()[2]<=self.wallDetectThreshold)
+        elif (self.orientation==1): return (self.getDistances()[1]<=self.wallDetectThreshold)
+        elif (self.orientation==3): return (self.getDistances()[3]<=self.wallDetectThreshold)
+        else: return False
     
     def getLeftWall(self):
-        return (self.getDistances()[0]<=self.wallDetectThreshold)
+        if (self.orientation==0): return (self.getDistances()[1]<=self.wallDetectThreshold)
+        elif (self.orientation==2): return (self.getDistances()[3]<=self.wallDetectThreshold)
+        elif (self.orientation==3): return (self.getDistances()[2]<=self.wallDetectThreshold)
+    
+    def getRightWall(self):
+        if (self.orientation==0): return (self.getDistances()[3]<=self.wallDetectThreshold)
+        elif (self.orientation==1): return (self.getDistances()[2]<=self.wallDetectThreshold)
+        elif (self.orientation==2): return (self.getDistances()[1]<=self.wallDetectThreshold)
+
+    def getRearWall(self):
+        if (self.orientation==0): return (self.getDistances()[0]<=self.wallDetectThreshold)
+        elif (self.orientation==1): return (self.getDistances()[3]<=self.wallDetectThreshold)
+        elif (self.orientation==2): return (self.getDistances()[2]<=self.wallDetectThreshold)
+        else: return False
 
     def stopMotors(self):
         self.set_motor_power(self.rightMotorPort+self.leftMotorPort, 0)

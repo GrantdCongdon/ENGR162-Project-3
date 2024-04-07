@@ -19,7 +19,10 @@ def main():
                     elif c == "d": robot.moveEast(wallAlign=False)
                     elif c == "c": robot.depositCargo()
                     else: print("Invalid command")
-            elif command == "m": print(robot.getMap(37, 0, 40, "cm"))
+            elif command == "m":
+                map = robot.getMap(37, 0, 40, "cm")
+                print(map)
+                map.toCSV("map.csv")
             elif command == "q": raise KeyboardInterrupt
             else: print("Invalid command")
         
