@@ -110,7 +110,8 @@ class MazeRobot(BrickPi3):
 
     # intakes the default ports for the motors, ultrasonics, gyro, and IR sensor
     def __init__(self, rightMotorPort: int, leftMotorPort: int, cargoPort: int, frontAlignDistanceSensorPort: int, rearAlignDistanceSensorPort: int,
-                 frontDistanceSensorPort: int, rightDistancePort: int, gyroPort: int, irPort: int, coords: list, mazeSize: list, orientation=0):
+                 frontDistanceSensorPort: int, rightDistancePort: int, gyroPort: int, irPort: int, touchPort: int, coords: list, mazeSize: list,
+                 orientation=0):
 
         # initializes the brickpi3, MPU9250, and grovepi
         super().__init__()
@@ -125,6 +126,7 @@ class MazeRobot(BrickPi3):
         self.rightDistancePort = rightDistancePort
         self.gyroPort = gyroPort
         self.irPort = irPort
+        self.touchPort = touchPort
         self.coords = coords
         self.orientation = orientation
         self.startCoords = [coord for coord in coords]
