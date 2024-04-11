@@ -649,7 +649,7 @@ class MazeRobot(BrickPi3):
         startTime = time()
         while (time()-startTime<10):
             self.set_motor_dps(self.rightMotorPort, 360)
-            self.set_motor_dps(self.leftMotorPort, 360)
+            self.set_motor_dps(self.leftMotorPort, -360)
         self.stopMotors()
         sleep(0.1)
         self.reset_all()
