@@ -1,5 +1,6 @@
 import MazeRobot as robot
 import csv
+import grovepi as gp
 
 hazardFile = "team37_hazards.csv"
 mapFile = "team37_map.csv"
@@ -85,6 +86,7 @@ def printResults(x):
             write = csv.writer(file)
             write.writerows(hazardList)
 
+"""
 def checkUp():
     if (gridStatus[grid[0] - position[0]][position[1] + 1] == 1):
         orientation = 0 #rotate up
@@ -125,23 +127,79 @@ def checkLeft():
         #move down while detecting, dont update position til fully moved
         gridStatus[grid[0] - position[0]][position[1] - 1] = 1
         #distanceY = end[1] - position[1]
-    
-printResults(1)
+"""
+
 
 while (not robot.exitMaze):
-    if (robot.frontAlignDistance >= robot.wallDetectThreshold and
-        robot.rearAlignDistance >= robot.wallDetectThreshold): #no left wall
-        robot.turn(-90)
-    elif (robot.getIrHazard()): #ir hazard exist
-        robot.setHazards()
-        robot.turn(180)
-    elif (robot.getMagnetHazard()): #magnet hazard exist
-        robot.setHazards()
-        robot.turn(180)
-    elif (robot.getFrontWall()): #front wall exist
+    
+    if (not robot.getLeftWall()): # left wall does not exist
+        if (robot.orientation == 0):
+            robot.moveWest()
+        elif (robot.orientation == 1):
+            robot.moveNorth()
+        elif (robot.orientation == 2):
+            robot.moveEast()
+        else:
+            robot.moveSouth()
+    elif (robot.getIrHazard()): # ir hazard exists
+        if (robot.orientation == 0):
+            robot.setMazeValue(robot.coords[0], robot.coords[1] + 1, 2)
+            robot.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
+                                 "Parameter Value": gp.analogRead(robot.irPort), "Hazard X-Coordinate": robot.coords[0]*robot.unitDistance,
+                                 "Hazard Y-Coordinate": (robot.coords[1] + 1)*robot.unitDistance})
+        elif (robot.orientation == 1):
+            robot.setMazeValue(robot.coords[0] + 1, robot.coords[1], 2)
+            robot.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
+                                 "Parameter Value": gp.analogRead(robot.irPort), "Hazard X-Coordinate": (robot.coords[0] + 1)*robot.unitDistance,
+                                 "Hazard Y-Coordinate": robot.coords[1]*robot.unitDistance})
+        elif (robot.orientation == 2):
+            robot.setMazeValue(robot.coords[0], robot.coords[1] - 1, 2)
+            robot.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
+                                 "Parameter Value": gp.analogRead(robot.irPort), "Hazard X-Coordinate": robot.coords[0]*robot.unitDistance,
+                                 "Hazard Y-Coordinate": (robot.coords[1] - 1)*robot.unitDistance})
+        else:
+            robot.setMazeValue(robot.coords[0] - 1, robot.coords[1], 2)
+            robot.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
+                                 "Parameter Value": gp.analogRead(robot.irPort), "Hazard X-Coordinate": (robot.coords[0] - 1)*robot.unitDistance,
+                                 "Hazard Y-Coordinate": robot.coords[1]*robot.unitDistance})
         robot.turn(90)
-    else:
-        robot.moveUnitForward()
+    elif (robot.getMagnetHazard()): # magnet hazard exists
+        if (robot.orientation == 0):
+            robot.setMazeValue(robot.coords[0], robot.coords[1] + 1, 2)
+            robot.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
+                                 "Parameter Value": robot.imu.readMagnet()["z"], "Hazard X-Coordinate": robot.coords[0]*robot.unitDistance,
+                                 "Hazard Y-Coordinate": (robot.coords[1] + 1)*robot.unitDistance})
+        elif (robot.orientation == 1):
+            robot.setMazeValue(robot.coords[0] + 1, robot.coords[1], 2)
+            robot.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
+                                 "Parameter Value": robot.imu.readMagnet()["z"], "Hazard X-Coordinate": (robot.coords[0] + 1)*robot.unitDistance,
+                                 "Hazard Y-Coordinate": robot.coords[1]*robot.unitDistance})
+        elif (robot.orientation == 2):
+            robot.setMazeValue(robot.coords[0], robot.coords[1] - 1, 2)
+            robot.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
+                                 "Parameter Value": robot.imu.readMagnet()["z"], "Hazard X-Coordinate": robot.coords[0]*robot.unitDistance,
+                                 "Hazard Y-Coordinate": (robot.coords[1] - 1)*robot.unitDistance})
+        else:
+            robot.setMazeValue(robot.coords[0] - 1, robot.coords[1], 2)
+            robot.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
+                                 "Parameter Value": robot.imu.readMagnet()["z"], "Hazard X-Coordinate": (robot.coords[0] - 1)*robot.unitDistance,
+                                 "Hazard Y-Coordinate": robot.coords[1]*robot.unitDistance})
+        robot.turn(90)
+    elif (robot.getFrontWall()): # front wall exists
+        robot.turn(90)
+    else: # left wall exists, no hazards, front wall does not exist
+        if (robot.orientation == 0):
+            robot.moveNorth()
+        elif (robot.orientation == 1):
+            robot.moveEast()
+        elif (robot.orientation == 2):
+            robot.moveSouth()
+        elif (robot.orientation == 3):
+            robot.moveWest()
+
+# maze exitted
+robot.celebrate()
+
 
 """while not (distanceX == 0 and distanceY == 0):
     if (distanceY > 0):
