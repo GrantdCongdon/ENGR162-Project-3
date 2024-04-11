@@ -1,11 +1,11 @@
 from MazeRobot import MazeRobot
 from time import sleep
 def main():
-    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, 6, 8, 4, MazeRobot.PORT_3, 2, [0, 0], [6, 6])
+    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, [0, 0], [6, 6])
     while True:
         try:
             command = input("Enter a command: ")
-            if command == "w": robot.moveNorth(wallAlign=False)
+            if command == "w": robot.moveNorth(wallAlign=True)
             elif command == "s": robot.moveSouth(wallAlign=False)
             elif command == "a": robot.moveWest(wallAlign=False)
             elif command == "d": robot.moveEast(wallAlign=False)
@@ -19,7 +19,10 @@ def main():
                     elif c == "d": robot.moveEast(wallAlign=False)
                     elif c == "c": robot.depositCargo()
                     else: print("Invalid command")
-            elif command == "m": print(robot.getMap(37, 0, 40, "cm"))
+            elif command == "m":
+                map = robot.getMap(37, 0, 40, "cm")
+                print(map)
+                map.toCSV("map.csv")
             elif command == "q": raise KeyboardInterrupt
             else: print("Invalid command")
         
