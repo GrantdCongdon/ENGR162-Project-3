@@ -2,7 +2,7 @@ from MazeRobot import MazeRobot
 from time import sleep
 from random import randint
 
-def bestMove(north, east, south, west):
+def randomExplore(north, east, south, west):
     if north is None: north = 1
     if east is None: east = 1
     if south is None: south = 1
@@ -49,7 +49,8 @@ def bestMove(north, east, south, west):
         return "west"
     else:
         return None
-    
+
+bestMove = randomExplore
 
 def main():
     robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, [0, 0], [6, 6])
