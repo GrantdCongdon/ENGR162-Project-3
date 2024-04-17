@@ -40,6 +40,7 @@ class MazeRobot(BrickPi3):
             mapInfo = ""
             for row in self.map:
                 for cell in row:
+                    if (cell<0): cell = 1
                     mapInfo += f"{cell}, "
                 mapInfo += "\n"
             return basicInfo + mapInfo
@@ -108,7 +109,7 @@ class MazeRobot(BrickPi3):
     centerDistance = 15
 
     # default threshold for the wall detection
-    wallDetectThreshold = 15
+    wallDetectThreshold = 20
 
     # define 90 degree turn
     squareTurn = 90
@@ -121,7 +122,7 @@ class MazeRobot(BrickPi3):
 
     # intakes the default ports for the motors, ultrasonics, gyro, and IR sensor
     def __init__(self, rightMotorPort: int, leftMotorPort: int, cargoPort: int, frontAlignDistanceSensorPort: int, rearAlignDistanceSensorPort: int,
-                 frontDistanceSensorPort: int, rightDistancePort: int, gyroPort: int, irPort: int, touchPort: int, coords: list, mazeSize: list,
+                 frontDistanceSensorPort: int, rightDistancePort: int, gyroPort: int, irPort: int, touchPort: int, coords: tuple, mazeSize: tuple,
                  orientation=0):
 
         # initializes the brickpi3, MPU9250, and grovepi
@@ -138,12 +139,12 @@ class MazeRobot(BrickPi3):
         self.gyroPort = gyroPort
         self.irPort = irPort
         self.touchPort = touchPort
-        self.coords = coords
+        self.coords = list(coords)
         self.orientation = orientation
-        self.startCoords = [coord for coord in coords]
+        self.startCoords = coords
         self.maze = [[0 for _ in range(mazeSize[0])] for _ in range(mazeSize[1])]
         self.hazards = []
-        self.setMazeValue(self.startCoords[0], self.startCoords[1], 5)
+        self.setMazeValue(coords[0], coords[1], 5)
 
         # configure grovepi
         gp.set_bus("RPI_1")
@@ -240,9 +241,9 @@ class MazeRobot(BrickPi3):
     # gets the distances measured by each ultrasonic sensor
     def getDistances(self):
         frontAlignDistance = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
-        while (frontAlignDistance >= 50): frontAlignDistance = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
+        while (frontAlignDistance >= 498): frontAlignDistance = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
         rearAlignDistance = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
-        while (rearAlignDistance >= 50): rearAlignDistance = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
+        while (rearAlignDistance >= 498): rearAlignDistance = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
         frontDistance = gp.ultrasonicRead(self.frontDistanceSensorPort)
         while (frontDistance >= 498): frontDistance = gp.ultrasonicRead(self.frontDistanceSensorPort)
         rightDistance = None
@@ -278,24 +279,24 @@ class MazeRobot(BrickPi3):
     def getNorthWall(self):
         if (self.orientation==0): return self.getFrontWall()
         elif (self.orientation==1): return self.getLeftWall()
-        elif (self.orientation==2): return None
+        elif (self.orientation==2): return False
         else: return self.getRightWall()
 
     def getEastWall(self):
         if (self.orientation==0): return self.getRightWall()
         elif (self.orientation==1): return self.getFrontWall()
         elif (self.orientation==2): return self.getLeftWall()
-        else: return None
+        else: return False
 
     def getSouthWall(self):
-        if (self.orientation==0): return None
+        if (self.orientation==0): return False
         elif (self.orientation==1): return self.getRightWall()
         elif (self.orientation==2): return self.getFrontWall()
         else: return self.getLeftWall()
 
     def getWestWall(self):
         if (self.orientation==0): return self.getLeftWall()
-        elif (self.orientation==1): return None
+        elif (self.orientation==1): return False
         elif (self.orientation==2): return self.getRightWall()
         else: return self.getFrontWall()
 
@@ -334,13 +335,14 @@ class MazeRobot(BrickPi3):
 
         # while the average encoder reading is less than the distance
         while (averageEncoderReading<self.encoderDistance):
-            if (not self.getLeftWall()): wallPresent = False
+            # get the distances from the ultrasonic sensors
+            distances = self.getDistances()
+            if (distances[0] > self.wallDetectThreshold or distances[1] > self.wallDetectThreshold): wallPresent = False
             else: wallPresent = True
             try:
+                
                 # if wall align is true, keep the robot aligned with the wall
                 if wallAlign and wallPresent:
-                    # get the distances from the ultrasonic sensors
-                    distances = self.getDistances()
 
                     if (distances[2] <= self.centerDistance): break
                     
@@ -358,6 +360,9 @@ class MazeRobot(BrickPi3):
                 else:
                     # otherwise, just drive forward for a distance
                     self.setMotorSpeeds(self.motorSpeed, self.motorSpeed)
+
+                    # make sure we don't run into the front wall
+                    if (distances[2] <= self.centerDistance): break
                 
                 # calculate the average encoder reading
                 averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
@@ -477,7 +482,6 @@ class MazeRobot(BrickPi3):
                 try:
                     self.setMotorSpeeds(self.centerMotorSpeed, self.centerMotorSpeed)
                     frontDistance = self.getDistances()[2]
-                    print(frontDistance)
                 except KeyboardInterrupt:
                     self.stopMotors()
                     sleep(0.1)
@@ -488,7 +492,6 @@ class MazeRobot(BrickPi3):
                 try:
                     self.setMotorSpeeds(-1*self.centerMotorSpeed, -1*self.centerMotorSpeed)
                     frontDistance = self.getDistances()[2]
-                    print(frontDistance)
                 except KeyboardInterrupt:
                     self.stopMotors()
                     sleep(0.1)
@@ -536,7 +539,15 @@ class MazeRobot(BrickPi3):
             self.exitedMaze = True
             return
         
-        if (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4):
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
+            ((self.getNorthWall() and self.getEastWall() and self.getWestWall()) or (self.getEastWall() and self.getWestWall() and
+                                                                                     self.getMazeValue(self.coords[0], self.coords[1])!=1))):
+            self.setMazeValue(self.coords[0], self.coords[1], -1)
+        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
+              (self.getMazeValue(self.coords[0], self.coords[1])==1 or self.getMazeValue(self.coords[0], self.coords[1])<0)):
+            self.setMazeValue(self.coords[0], self.coords[1], -abs(self.getMazeValue(self.coords[0], self.coords[1]))-1)
+        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
+              self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
         
         # centers the robot in the cell front to back
@@ -575,13 +586,21 @@ class MazeRobot(BrickPi3):
             self.orientation = 1
         
         # update the coordinates
-        try: self.coords[1] += 1
+        try: self.coords[0] += 1
         except IndexError:
             self.setMazeValue(self.coords[0], self.coords[1], 4)
             self.exitedMaze = True
             return
         
-        if (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4):
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
+            ((self.getEastWall() and self.getNorthWall() and self.getSouthWall()) or (self.getNorthWall() and self.getSouthWall() and
+                                                                                     self.getMazeValue(self.coords[0], self.coords[1])!=1))):
+            self.setMazeValue(self.coords[0], self.coords[1], -1)
+        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
+              (self.getMazeValue(self.coords[0], self.coords[1])==1 or self.getMazeValue(self.coords[0], self.coords[1])<0)):
+            self.setMazeValue(self.coords[0], self.coords[1], -abs(self.getMazeValue(self.coords[0], self.coords[1]))-1)
+        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
+              self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back
@@ -620,13 +639,21 @@ class MazeRobot(BrickPi3):
             self.orientation = 2
         
         # update the coordinates
-        try: self.coords[1] += 1
+        try: self.coords[1] -= 1
         except IndexError:
             self.setMazeValue(self.coords[0], self.coords[1], 4)
             self.exitedMaze = True
             return
         
-        if (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4):
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
+            ((self.getSouthWall() and self.getEastWall() and self.getWestWall()) or (self.getEastWall() and self.getWestWall() and
+                                                                                     self.getMazeValue(self.coords[0], self.coords[1])!=1))):
+            self.setMazeValue(self.coords[0], self.coords[1], -1)
+        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
+              (self.getMazeValue(self.coords[0], self.coords[1])==1 or self.getMazeValue(self.coords[0], self.coords[1])<0)):
+            self.setMazeValue(self.coords[0], self.coords[1], -abs(self.getMazeValue(self.coords[0], self.coords[1]))-1)
+        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
+              self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back
@@ -666,13 +693,21 @@ class MazeRobot(BrickPi3):
         else: self.moveUnitForward(wallAlign)
         
         # update the coordinates
-        try: self.coords[1] += 1
+        try: self.coords[0] -= 1
         except IndexError:
             self.setMazeValue(self.coords[0], self.coords[1], 4)
             self.exitedMaze = True
             return
         
-        if (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4):
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
+            ((self.getWestWall() and self.getNorthWall() and self.getSouthWall()) or (self.getNorthWall() and self.getSouthWall() and
+                                                                                     self.getMazeValue(self.coords[0], self.coords[1])!=1))):
+            self.setMazeValue(self.coords[0], self.coords[1], -1)
+        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
+              (self.getMazeValue(self.coords[0], self.coords[1])==1 or self.getMazeValue(self.coords[0], self.coords[1])<0)):
+            self.setMazeValue(self.coords[0], self.coords[1], -abs(self.getMazeValue(self.coords[0], self.coords[1]))-1)
+        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
+              self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back
