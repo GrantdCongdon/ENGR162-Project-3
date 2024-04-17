@@ -303,7 +303,8 @@ class MazeRobot(BrickPi3):
     # set a value for a maze cell
     def getMazeValue(self, x: int, y: int):
         y = len(self.maze)-y-1
-        return self.maze[y][x]
+        try: return self.maze[y][x]
+        except IndexError: -1
     
     def resetAll(self):
         # reset motor encoders
@@ -539,15 +540,13 @@ class MazeRobot(BrickPi3):
             self.exitedMaze = True
             return
         
+        # sets a maze value of -1 if there is a wall on all sides or if the cell is not a junction
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
             ((self.getNorthWall() and self.getEastWall() and self.getWestWall()) or (self.getEastWall() and self.getWestWall() and
-                                                                                     self.getMazeValue(self.coords[0], self.coords[1])!=1))):
+                                                                                     self.getMazeValue(self.coords[0], self.coords[1]-1)==-1))):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
-        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
-              (self.getMazeValue(self.coords[0], self.coords[1])==1 or self.getMazeValue(self.coords[0], self.coords[1])<0)):
-            self.setMazeValue(self.coords[0], self.coords[1], -abs(self.getMazeValue(self.coords[0], self.coords[1]))-1)
-        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
-              self.getMazeValue(self.coords[0], self.coords[1])==0):
+
+        elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
         
         # centers the robot in the cell front to back
@@ -592,15 +591,13 @@ class MazeRobot(BrickPi3):
             self.exitedMaze = True
             return
         
+        # sets a maze value of -1 if there is a wall on all sides or if the cell is not a junction
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            ((self.getEastWall() and self.getNorthWall() and self.getSouthWall()) or (self.getNorthWall() and self.getSouthWall() and
-                                                                                     self.getMazeValue(self.coords[0], self.coords[1])!=1))):
+            ((self.getNorthWall() and self.getSouthWall() and self.getWestWall()) or (self.getNorthWall() and self.getSouthWall() and
+                                                                                     self.getMazeValue(self.coords[0]-1, self.coords[1])==-1))):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
-        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
-              (self.getMazeValue(self.coords[0], self.coords[1])==1 or self.getMazeValue(self.coords[0], self.coords[1])<0)):
-            self.setMazeValue(self.coords[0], self.coords[1], -abs(self.getMazeValue(self.coords[0], self.coords[1]))-1)
-        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
-              self.getMazeValue(self.coords[0], self.coords[1])==0):
+
+        elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back
@@ -646,14 +643,10 @@ class MazeRobot(BrickPi3):
             return
         
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            ((self.getSouthWall() and self.getEastWall() and self.getWestWall()) or (self.getEastWall() and self.getWestWall() and
-                                                                                     self.getMazeValue(self.coords[0], self.coords[1])!=1))):
+            ((self.getEastWall() and self.getWestWall() and self.getNorthWall()) or (self.getEastWall() and self.getWestWall() and
+                                                                                        self.getMazeValue(self.coords[0], self.coords[1]+1)==-1))):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
-        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
-              (self.getMazeValue(self.coords[0], self.coords[1])==1 or self.getMazeValue(self.coords[0], self.coords[1])<0)):
-            self.setMazeValue(self.coords[0], self.coords[1], -abs(self.getMazeValue(self.coords[0], self.coords[1]))-1)
-        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
-              self.getMazeValue(self.coords[0], self.coords[1])==0):
+        elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back
@@ -700,14 +693,10 @@ class MazeRobot(BrickPi3):
             return
         
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            ((self.getWestWall() and self.getNorthWall() and self.getSouthWall()) or (self.getNorthWall() and self.getSouthWall() and
-                                                                                     self.getMazeValue(self.coords[0], self.coords[1])!=1))):
+            ((self.getNorthWall() and self.getSouthWall() and self.getEastWall()) or (self.getNorthWall() and self.getSouthWall() and
+                                                                                     self.getMazeValue(self.coords[0]+1, self.coords[1])==-1))):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
-        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
-              (self.getMazeValue(self.coords[0], self.coords[1])==1 or self.getMazeValue(self.coords[0], self.coords[1])<0)):
-            self.setMazeValue(self.coords[0], self.coords[1], -abs(self.getMazeValue(self.coords[0], self.coords[1]))-1)
-        elif (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4 and
-              self.getMazeValue(self.coords[0], self.coords[1])==0):
+        elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back

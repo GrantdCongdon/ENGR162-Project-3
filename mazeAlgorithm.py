@@ -2,7 +2,7 @@ from MazeRobot import MazeRobot
 from time import sleep
 from random import randint
 
-def randomExplore(north, east, south, west):
+def randomExplore(northWall, eastWall, southWall, westWall, north, south, east, west):
     if north is None: north = 1
     if east is None: east = 1
     if south is None: south = 1
@@ -50,6 +50,109 @@ def randomExplore(north, east, south, west):
         return "west"
     else:
         return None
+    
+def randomExplore2(northWall, eastWall, southWall, westWall, northMap, southMap, eastMap, westMap):
+    moves = []
+    if (not northWall): moves.append("north")
+    if (not eastWall): moves.append("east")
+    if (not southWall): moves.append("south")
+    if (not westWall): moves.append("west")
+    
+    if (len(moves) == 0): return None
+    elif (len(moves) == 1): return moves[0]
+    elif (len(moves) == 2):
+        if ("north" in moves and "east" in moves):
+            if (northMap == 0 and eastMap != 0): return "north"
+            elif (northMap != 0 and eastMap == 0): return "east"
+            else: return moves[randint(0, 1)]
+        elif ("north" in moves and "south" in moves):
+            if (northMap == 0 and southMap != 0): return "north"
+            elif (northMap != 0 and southMap == 0): return "south"
+            else: return moves[randint(0, 1)]
+        elif ("north" in moves and "west" in moves):
+            if (northMap == 0 and westMap != 0): return "north"
+            elif (northMap != 0 and westMap == 0): return "west"
+            else: return moves[randint(0, 1)]
+        elif ("east" in moves and "south" in moves):
+            if (eastMap == 0 and southMap != 0): return "east"
+            elif (eastMap != 0 and southMap == 0): return "south"
+            else: return moves[randint(0, 1)]
+        elif ("east" in moves and "west" in moves):
+            if (eastMap == 0 and westMap != 0): return "east"
+            elif (eastMap != 0 and westMap == 0): return "west"
+            else: return moves[randint(0, 1)]
+        elif ("south" in moves and "west" in moves):
+            if (southMap == 0 and westMap != 0): return "south"
+            elif (southMap != 0 and westMap == 0): return "west"
+            else: return moves[randint(0, 1)]
+    elif (len(moves) == 3):
+        if ("north" not in moves):
+            if (eastMap == 0 and southMap != 0 and westMap != 0): return "east"
+            elif (eastMap != 0 and southMap == 0 and westMap != 0): return "south"
+            elif (eastMap != 0 and southMap != 0 and westMap == 0): return "west"
+            elif (eastMap == 0 and southMap == 0 and westMap != 0): return moves[randint(0, 1)]
+            elif (eastMap == 0 and southMap != 0 and westMap == 0):
+                x = randint(0, 1)
+                return moves[x if x != 1 else 2]
+            elif (eastMap != 0 and southMap == 0 and westMap == 0): return moves[randint(1, 2)]
+            else: return moves[randint(0, 2)]
+        elif ("east" not in moves):
+            if (northMap == 0 and southMap != 0 and westMap != 0): return "north"
+            elif (northMap != 0 and southMap == 0 and westMap != 0): return "south"
+            elif (northMap != 0 and southMap != 0 and westMap == 0): return "west"
+            elif (northMap == 0 and southMap == 0 and westMap != 0): return moves[randint(0, 1)]
+            elif (northMap == 0 and southMap != 0 and westMap == 0):
+                x = randint(0, 1)
+                return moves[x if x != 1 else 2]
+            elif (northMap != 0 and southMap == 0 and westMap == 0): return moves[randint(1, 2)]
+            else: return moves[randint(0, 2)]
+        elif ("south" not in moves):
+            if (northMap == 0 and eastMap != 0 and westMap != 0): return "north"
+            elif (northMap != 0 and eastMap == 0 and westMap != 0): return "east"
+            elif (northMap != 0 and eastMap != 0 and westMap == 0): return "west"
+            elif (northMap == 0 and eastMap == 0 and westMap != 0): return moves[randint(0, 1)]
+            elif (northMap == 0 and eastMap != 0 and westMap == 0):
+                x = randint(0, 1)
+                return moves[x if x != 1 else 2]
+            elif (northMap != 0 and eastMap == 0 and westMap == 0): return moves[randint(1, 2)]
+            else: return moves[randint(0, 2)]
+        elif ("west" not in moves):
+            if (northMap == 0 and eastMap != 0 and southMap != 0): return "north"
+            elif (northMap != 0 and eastMap == 0 and southMap != 0): return "east"
+            elif (northMap != 0 and eastMap != 0 and southMap == 0): return "south"
+            elif (northMap == 0 and eastMap == 0 and southMap != 0): return moves[randint(0, 1)]
+            elif (northMap == 0 and eastMap != 0 and southMap == 0):
+                x = randint(0, 1)
+                return moves[x if x != 1 else 2]
+            elif (northMap != 0 and eastMap == 0 and southMap == 0): return moves[randint(1, 2)]
+            else: return moves[randint(0, 2)]
+    elif (len(moves) == 4):
+        if (northMap == 0 and eastMap != 0 and southMap != 0 and westMap != 0): return "north"
+        elif (northMap != 0 and eastMap == 0 and southMap != 0 and westMap != 0): return "east"
+        elif (northMap != 0 and eastMap != 0 and southMap == 0 and westMap != 0): return "south"
+        elif (northMap != 0 and eastMap != 0 and southMap != 0 and westMap == 0): return "west"
+        elif (northMap == 0 and eastMap == 0 and southMap != 0 and westMap != 0): return moves[randint(0, 1)]
+        elif (northMap == 0 and eastMap != 0 and southMap == 0 and westMap != 0):
+            x = randint(0, 1)
+            return moves[x if x != 1 else 2]
+        elif (northMap == 0 and eastMap != 0 and southMap != 0 and westMap == 0):
+            x = randint(0, 1)
+            return moves[x if x != 0 else 3]
+        elif (northMap != 0 and eastMap == 0 and southMap == 0 and westMap != 0): return moves[randint(1, 2)]
+        elif (northMap != 0 and eastMap == 0 and southMap != 0 and westMap == 0):
+            x = randint(1, 2)
+            return moves[x if x != 2 else 3]
+        elif (northMap != 0 and eastMap != 0 and southMap == 0 and westMap == 0): return moves[randint(2, 3)]
+        elif (northMap == 0 and eastMap == 0 and southMap == 0 and westMap != 0): return moves[randint(0, 2)]
+        elif (northMap == 0 and eastMap == 0 and southMap != 0 and westMap == 0):
+            x = randint(0, 2)
+            return moves[x if x != 1 else 3]
+        elif (northMap == 0 and eastMap != 0 and southMap == 0 and westMap == 0):
+            x = randint(0, 2)
+            return moves[x if x != 0 else 3]
+        elif (northMap != 0 and eastMap == 0 and southMap == 0 and westMap == 0): return moves[randint(1, 3)]
+        else: return moves[randint(0, 3)]
+
 
 def rankedExplore(north, east, south, west):
     if north is None: north = 1
@@ -61,7 +164,7 @@ def rankedExplore(north, east, south, west):
     return
     
 
-bestMove = randomExplore
+bestMove = randomExplore2
 
 def main():
     robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, [1, 0], (3, 7))
@@ -76,33 +179,32 @@ def main():
     robot.moveNorth(wallAlign=False)
     while (not robot.exitedMaze):
         try:
+            # get the walls around the robot
+            northWall = robot.getNorthWall()
+            eastWall = robot.getEastWall()
+            southWall = robot.getSouthWall()
+            westWall = robot.getWestWall()
+
             # get the values of the surrounding cells
             try:  northMapValue = robot.getMazeValue(robot.location[0], robot.location[1]+1)
             except IndexError: northMapValue = None
             try:  eastMapValue = robot.getMazeValue(robot.location[0]+1, robot.location[1])
             except IndexError: eastMapValue = None
-            try:  southMathValue = robot.getMazeValue(robot.location[0], robot.location[1]-1)
-            except IndexError: southMathValue = None
+            try:  southMapValue = robot.getMazeValue(robot.location[0], robot.location[1]-1)
+            except IndexError: southMapValue = None
             try:  westMapValue = robot.getMazeValue(robot.location[0]-1, robot.location[1])
             except IndexError: westMapValue = None
 
-            northMapValue = northMapValue if not robot.getNorthWall() else None
-            eastMapValue = eastMapValue if not robot.getEastWall() else None
-            southMathValue = southMathValue if not robot.getSouthWall() else None
-            westMapValue = westMapValue if not robot.getWestWall() else None
-
             northMapValue = northMapValue if not northHazard else None
             eastMapValue = eastMapValue if not eastHazard else None
-            southMathValue = southMathValue if not southHazard else None
+            southMapValue = southMapValue if not southHazard else None
             westMapValue = westMapValue if not westHazard else None
 
-            northMapValue = northMapValue if northMapValue != -1 else None
-            eastMapValue = eastMapValue if eastMapValue != -1 else None
-            southMathValue = southMathValue if southMathValue != -1 else None
-            westMapValue = westMapValue if westMapValue != -1 else None
+            print(f"North Wall: {northWall}\tEast Wall: {eastWall}\tSouth Wall: {southWall}\tWest Wall: {westWall}")
+            print(f"North Map: {northMapValue}\tEast Map: {eastMapValue}\tSouth Map: {southMapValue}\tWest Map:{westMapValue}")
 
             # get the best move
-            move = bestMove(northMapValue, eastMapValue, southMathValue, westMapValue)
+            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue)
             print(f"X-coord: {robot.location[0]}\tY-coord: {robot.location[1]}")
             print(move)
             sleep(1)
@@ -115,7 +217,7 @@ def main():
                 except robot.Hazard: eastMapValue = True
             elif (move == "south"):
                 try: robot.moveSouth()
-                except robot.Hazard: southMathValue = True
+                except robot.Hazard: southMapValue = True
             elif (move == "west"):
                 try: robot.moveWest()
                 except robot.Hazard: westMapValue = True
