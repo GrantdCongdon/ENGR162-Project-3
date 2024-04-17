@@ -35,7 +35,7 @@ for row in range(0, gridSize[0]):
 # Starting square = explored
 gridStatus[grid[0] - start[0]][start[1]] = 5
 
-# Grid status: ONLY USES 0 AND 1 ATM
+#-----------------
 # 0 Not part of path taken
 # 1 Path GEARS took
 # 2 Heat
@@ -43,14 +43,6 @@ gridStatus[grid[0] - start[0]][start[1]] = 5
 # 4 Exit
 # 5 Origin
 #-----------------
-# -1 Wall
-# -2 Intersection
-#-----------------
-
-#distanceX = end[0] - start[0]
-#distanceY = end[1] - start[1]
-
-
 
 def printResults(x):
     writeList = [["Team: 37"], ["Map: " + str(mapNum)], ["Unit Length: 10"],
