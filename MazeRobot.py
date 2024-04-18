@@ -4,6 +4,7 @@ from brickpi3 import BrickPi3, SensorError
 from MPU9250 import MPU9250
 from time import sleep, time
 from math import pi
+from statistics import median
 
 # class that covers all the aspects of the ENGR161/162 robot
 class MazeRobot(BrickPi3):
@@ -40,6 +41,7 @@ class MazeRobot(BrickPi3):
             mapInfo = ""
             for row in self.map:
                 for cell in row:
+                    if (cell<0): cell = 1
                     mapInfo += f"{cell}, "
                 mapInfo += "\n"
             return basicInfo + mapInfo
@@ -87,7 +89,7 @@ class MazeRobot(BrickPi3):
     
     # defines the default proportional gain for driving and turning
     turnProportionalGain = 4
-    wallAlignProportionalGain = 10
+    wallAlignProportionalGain = 12
     
     # defines the default threshold for the IR sensor when a hazard is present
     irHazardThreshold = 25
@@ -102,13 +104,13 @@ class MazeRobot(BrickPi3):
     cargoEncoderDistance = 200
 
     # default distance for wall alignment
-    wallDistance=10
+    wallDistance = 10
 
     # default center distance
-    centerDistance = 15
+    centerDistance = 13
 
     # default threshold for the wall detection
-    wallDetectThreshold = 15
+    wallDetectThreshold = 20
 
     # define 90 degree turn
     squareTurn = 90
@@ -121,7 +123,7 @@ class MazeRobot(BrickPi3):
 
     # intakes the default ports for the motors, ultrasonics, gyro, and IR sensor
     def __init__(self, rightMotorPort: int, leftMotorPort: int, cargoPort: int, frontAlignDistanceSensorPort: int, rearAlignDistanceSensorPort: int,
-                 frontDistanceSensorPort: int, rightDistancePort: int, gyroPort: int, irPort: int, touchPort: int, coords: list, mazeSize: list,
+                 frontDistanceSensorPort: int, rightDistancePort: int, gyroPort: int, irPort: int, touchPort: int, coords: tuple, mazeSize: tuple,
                  orientation=0):
 
         # initializes the brickpi3, MPU9250, and grovepi
@@ -138,16 +140,19 @@ class MazeRobot(BrickPi3):
         self.gyroPort = gyroPort
         self.irPort = irPort
         self.touchPort = touchPort
-        self.coords = coords
+        self.coords = list(coords)
         self.orientation = orientation
-        self.startCoords = [coord for coord in coords]
+        self.startCoords = coords
         self.maze = [[0 for _ in range(mazeSize[0])] for _ in range(mazeSize[1])]
         self.hazards = []
-        self.setMazeValue(self.startCoords[0], self.startCoords[1], 5)
+        self.setMazeValue(coords[0], coords[1], 5)
 
         # configure grovepi
         gp.set_bus("RPI_1")
         
+        self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
+        self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
+
         # configure gyro sensor
         self.resetAll()
 
@@ -239,17 +244,29 @@ class MazeRobot(BrickPi3):
 
     # gets the distances measured by each ultrasonic sensor
     def getDistances(self):
-        frontAlignDistance = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
-        while (frontAlignDistance >= 50): frontAlignDistance = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
-        rearAlignDistance = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
-        while (rearAlignDistance >= 50): rearAlignDistance = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
-        frontDistance = gp.ultrasonicRead(self.frontDistanceSensorPort)
-        while (frontDistance >= 498): frontDistance = gp.ultrasonicRead(self.frontDistanceSensorPort)
+        frontAlignDistanceList = []
+        rearAlignDistanceList = []
+        frontDistanceList = []
+        rightDistanceList = []
+
+        while (len(frontAlignDistanceList) < 20): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
+        frontAlignDistance = median(frontAlignDistanceList)
+        
+        while (len(rearAlignDistanceList) < 20): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
+        rearAlignDistance = median(rearAlignDistanceList)
+
+        while (len(frontDistanceList) < 20): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
+        frontDistance = median(frontDistanceList)
+
         rightDistance = None
         while rightDistance is None:
             try: rightDistance = self.get_sensor(self.rightDistancePort)
             except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
             except (SensorError): continue
+        
+        while (len(rightDistanceList) < 50): rightDistanceList.append(self.get_sensor(self.rightDistancePort))
+        rightDistance = median(rightDistanceList)
+
         return [frontAlignDistance , rearAlignDistance, frontDistance, rightDistance]
     
     # returns whether a IR hazard is detected
@@ -267,56 +284,84 @@ class MazeRobot(BrickPi3):
         return self.map
     
     def getFrontWall(self):
-        return (self.getDistances()[2] <= self.wallDetectThreshold)
+        distance = self.getDistances()[2]
+        print(f"Front distance: {distance}")
+        return (distance <= self.wallDetectThreshold)
     
     def getLeftWall(self):
-        return (self.getDistances()[0] <= self.wallDetectThreshold)
+        distance = self.getDistances()[0]
+        print(f"Left distance: {distance}")
+        return (distance <= self.wallDetectThreshold)
     
     def getRightWall(self):
-        return (self.getDistances()[3] <= self.wallDetectThreshold)
+        distance = self.getDistances()[3]
+        print(f"Right distance: {distance}")
+        return (distance <= self.wallDetectThreshold)
     
     def getNorthWall(self):
         if (self.orientation==0): return self.getFrontWall()
         elif (self.orientation==1): return self.getLeftWall()
-        elif (self.orientation==2): return None
+        elif (self.orientation==2): return False
         else: return self.getRightWall()
 
     def getEastWall(self):
         if (self.orientation==0): return self.getRightWall()
         elif (self.orientation==1): return self.getFrontWall()
         elif (self.orientation==2): return self.getLeftWall()
-        else: return None
+        else: return False
 
     def getSouthWall(self):
-        if (self.orientation==0): return None
+        if (self.orientation==0): return False
         elif (self.orientation==1): return self.getRightWall()
         elif (self.orientation==2): return self.getFrontWall()
         else: return self.getLeftWall()
 
     def getWestWall(self):
         if (self.orientation==0): return self.getLeftWall()
-        elif (self.orientation==1): return None
+        elif (self.orientation==1): return False
         elif (self.orientation==2): return self.getRightWall()
         else: return self.getFrontWall()
 
     # set a value for a maze cell
     def getMazeValue(self, x: int, y: int):
         y = len(self.maze)-y-1
-        return self.maze[y][x]
+        if (x<0): return -5
+        if (y<0): return -5
+        try: return self.maze[y][x]
+        except IndexError: return -5
     
     def resetAll(self):
         # reset motor encoders
-        self.offset_motor_encoder(self.rightMotorPort,
+        rightMotorEncoder = self.get_motor_encoder(self.rightMotorPort)
+        while (rightMotorEncoder != 0):
+            self.offset_motor_encoder(self.rightMotorPort,
                                   self.get_motor_encoder(self.rightMotorPort))
-        self.offset_motor_encoder(self.leftMotorPort,
-                                  self.get_motor_encoder(self.leftMotorPort))
+            rightMotorEncoder = self.get_motor_encoder(self.rightMotorPort)
         
-        # reset gyro sensor and ultrasonic
-        self.reset_all()
+        leftMotorEncoder = self.get_motor_encoder(self.leftMotorPort)
+        while (leftMotorEncoder != 0):
+            self.offset_motor_encoder(self.leftMotorPort,
+                                  self.get_motor_encoder(self.leftMotorPort))
+            leftMotorEncoder = self.get_motor_encoder(self.leftMotorPort)
+
+
+        gyroValue = None
+        while gyroValue is None:
+            try: gyroValue = self.get_sensor(self.gyroPort)[0]
+            except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
+            except (SensorError): continue
+        
+        while gyroValue != 0:
+            self.reset_all()
+            # calibrate gyro sensor
+            gyroValue = None
+            while gyroValue is None:
+                try: gyroValue = self.get_sensor(self.gyroPort)[0]
+                except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
+                except (SensorError): continue
 
         # reinitialize the sensors
         self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
-        self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
         return
     
     def stopMotors(self):
@@ -334,13 +379,14 @@ class MazeRobot(BrickPi3):
 
         # while the average encoder reading is less than the distance
         while (averageEncoderReading<self.encoderDistance):
-            if (not self.getLeftWall()): wallPresent = False
+            # get the distances from the ultrasonic sensors
+            distances = self.getDistances()
+            if (distances[0] > self.wallDetectThreshold or distances[1] > self.wallDetectThreshold): wallPresent = False
             else: wallPresent = True
             try:
+                
                 # if wall align is true, keep the robot aligned with the wall
                 if wallAlign and wallPresent:
-                    # get the distances from the ultrasonic sensors
-                    distances = self.getDistances()
 
                     if (distances[2] <= self.centerDistance): break
                     
@@ -358,6 +404,9 @@ class MazeRobot(BrickPi3):
                 else:
                     # otherwise, just drive forward for a distance
                     self.setMotorSpeeds(self.motorSpeed, self.motorSpeed)
+
+                    # make sure we don't run into the front wall
+                    if (distances[2] <= self.centerDistance): break
                 
                 # calculate the average encoder reading
                 averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
@@ -375,14 +424,10 @@ class MazeRobot(BrickPi3):
     def turn(self, degrees):
         # reset the motors and sensors
         self.resetAll()
-        # calibrate gyro sensor
-        gyroValue = None
-        while gyroValue is None:
-            try: gyroValue = self.get_sensor(self.gyroPort)[0]
-            except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
-            except (SensorError): continue
         
-        sleep(1)
+        # get the gyro value
+        gyroValue = self.get_sensor(self.gyroPort)[0]
+        
         # turn right
         if (gyroValue < degrees):
             # while the gyro value is less than the degrees
@@ -441,6 +486,22 @@ class MazeRobot(BrickPi3):
                     break
 
         self.stopMotors()
+
+        # get the distances from the ultrasonic sensors
+        distances = self.getDistances()
+        if (distances[0] < self.wallDetectThreshold and distances[1] < self.wallDetectThreshold):
+            while (distances[0]-distances[1] == 0):
+                # get the distances from the ultrasonic sensors
+                distances = self.getDistances()
+
+                # calculate the error for the tilt alignment
+                tiltError = (distances[0] - distances[1])*50
+
+                # set the motor speeds
+                self.setMotorSpeeds(tiltError, -tiltError)
+
+                distances = self.getDistances()
+
         return
     
     def depositCargo(self):
@@ -477,7 +538,6 @@ class MazeRobot(BrickPi3):
                 try:
                     self.setMotorSpeeds(self.centerMotorSpeed, self.centerMotorSpeed)
                     frontDistance = self.getDistances()[2]
-                    print(frontDistance)
                 except KeyboardInterrupt:
                     self.stopMotors()
                     sleep(0.1)
@@ -488,7 +548,6 @@ class MazeRobot(BrickPi3):
                 try:
                     self.setMotorSpeeds(-1*self.centerMotorSpeed, -1*self.centerMotorSpeed)
                     frontDistance = self.getDistances()[2]
-                    print(frontDistance)
                 except KeyboardInterrupt:
                     self.stopMotors()
                     sleep(0.1)
@@ -500,19 +559,6 @@ class MazeRobot(BrickPi3):
     
     # moves the robot "north"
     def moveNorth(self, wallAlign=True):
-        # check for hazards and walls and update the maze
-        if (self.getIrHazard()):
-            self.setMazeValue(self.coords[0], self.coords[1]+1, 2)
-            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
-                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
-            raise self.Hazard("IR")
-        elif (self.getMagnetHazard()):
-            self.setMazeValue(self.coords[0], self.coords[1]+1, 3)
-            self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
-                                 "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
-                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
-            raise self.Hazard("Magnet")
         
         # check the orientation and turn/move accordingly
         if (self.orientation==0): self.moveUnitForward(wallAlign)
@@ -530,35 +576,42 @@ class MazeRobot(BrickPi3):
             self.orientation = 0
         
         # update the coordinates
-        try: self.coords[1] += 1
-        except IndexError:
+        self.coords[1] += 1
+        if (self.coords[1]>=len(self.maze)):
             self.setMazeValue(self.coords[0], self.coords[1], 4)
             self.exitedMaze = True
             return
         
-        if (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4):
+        # sets a maze value of -1 if there is a wall on all sides or if the cell is not a junction
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
+            ((self.getNorthWall() and self.getEastWall() and self.getWestWall()) or (self.getEastWall() and self.getWestWall() and
+                                                                                     self.getMazeValue(self.coords[0], self.coords[1]-1)==-1))):
+            self.setMazeValue(self.coords[0], self.coords[1], -1)
+
+        elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
         
         # centers the robot in the cell front to back
         if (wallAlign and self.getFrontWall()): self.moveCenter()
         
-        return
-    
-    # same thing for the east
-    def moveEast(self, wallAlign=True):
         # check for hazards and walls and update the maze
         if (self.getIrHazard()):
-            self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
+            self.setMazeValue(self.coords[0], self.coords[1]+1, 2)
             self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
                                  "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                  "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
             raise self.Hazard("IR")
         elif (self.getMagnetHazard()):
-            self.setMazeValue(self.coords[0]+1, self.coords[1], 3)
+            self.setMazeValue(self.coords[0], self.coords[1]+1, 3)
             self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
                                  "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                  "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
             raise self.Hazard("Magnet")
+
+        return
+    
+    # same thing for the east
+    def moveEast(self, wallAlign=True):
             
         if (self.orientation==0):
             self.turn(self.squareTurn)
@@ -575,17 +628,37 @@ class MazeRobot(BrickPi3):
             self.orientation = 1
         
         # update the coordinates
-        try: self.coords[1] += 1
-        except IndexError:
+        self.coords[0] += 1
+        if (self.coords[0]>=len(self.maze[0])):
             self.setMazeValue(self.coords[0], self.coords[1], 4)
             self.exitedMaze = True
             return
         
-        if (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4):
+        # sets a maze value of -1 if there is a wall on all sides or if the cell is not a junction
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
+            ((self.getNorthWall() and self.getSouthWall() and self.getEastWall()) or (self.getNorthWall() and self.getSouthWall() and
+                                                                                     self.getMazeValue(self.coords[0]-1, self.coords[1])==-1))):
+            self.setMazeValue(self.coords[0], self.coords[1], -1)
+
+        elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back
         if (wallAlign and self.getFrontWall()): self.moveCenter()
+
+        # check for hazards and walls and update the maze
+        if (self.getIrHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
+            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
+                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("IR")
+        elif (self.getMagnetHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 3)
+            self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
+                                 "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("Magnet")
 
         return
     
@@ -620,17 +693,35 @@ class MazeRobot(BrickPi3):
             self.orientation = 2
         
         # update the coordinates
-        try: self.coords[1] += 1
-        except IndexError:
+        self.coords[1] -= 1
+        if (self.coords[1]<0):
             self.setMazeValue(self.coords[0], self.coords[1], 4)
             self.exitedMaze = True
             return
         
-        if (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4):
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
+            ((self.getEastWall() and self.getWestWall() and self.getSouthWall()) or (self.getEastWall() and self.getWestWall() and
+                                                                                        self.getMazeValue(self.coords[0], self.coords[1]+1)==-1))):
+            self.setMazeValue(self.coords[0], self.coords[1], -1)
+        elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back
         if (wallAlign and self.getFrontWall()): self.moveCenter()
+
+        # check for hazards and walls and update the maze
+        if (self.getIrHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
+            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
+                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("IR")
+        elif (self.getMagnetHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 3)
+            self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
+                                 "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("Magnet")
 
         return
     
@@ -658,7 +749,6 @@ class MazeRobot(BrickPi3):
             self.turn(self.aboutFace)
             self.moveUnitForward(wallAlign)
             self.orientation = 3
-
         elif (self.orientation==2):
             self.turn(self.squareTurn)
             self.moveUnitForward(wallAlign)
@@ -666,17 +756,35 @@ class MazeRobot(BrickPi3):
         else: self.moveUnitForward(wallAlign)
         
         # update the coordinates
-        try: self.coords[1] += 1
-        except IndexError:
+        self.coords[0] -= 1
+        if (self.coords[0]<0):
             self.setMazeValue(self.coords[0], self.coords[1], 4)
             self.exitedMaze = True
             return
         
-        if (self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4):
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
+            ((self.getNorthWall() and self.getSouthWall() and self.getWestWall()) or (self.getNorthWall() and self.getSouthWall() and
+                                                                                     self.getMazeValue(self.coords[0]+1, self.coords[1])==-1))):
+            self.setMazeValue(self.coords[0], self.coords[1], -1)
+        elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back
         if (wallAlign and self.getFrontWall()): self.moveCenter()
+
+        # check for hazards and walls and update the maze
+        if (self.getIrHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
+            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
+                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("IR")
+        elif (self.getMagnetHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 3)
+            self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
+                                 "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("Magnet")
 
         return
     
