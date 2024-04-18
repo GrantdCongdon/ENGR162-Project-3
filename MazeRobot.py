@@ -559,19 +559,6 @@ class MazeRobot(BrickPi3):
     
     # moves the robot "north"
     def moveNorth(self, wallAlign=True):
-        # check for hazards and walls and update the maze
-        if (self.getIrHazard()):
-            self.setMazeValue(self.coords[0], self.coords[1]+1, 2)
-            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
-                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
-            raise self.Hazard("IR")
-        elif (self.getMagnetHazard()):
-            self.setMazeValue(self.coords[0], self.coords[1]+1, 3)
-            self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
-                                 "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
-                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
-            raise self.Hazard("Magnet")
         
         # check the orientation and turn/move accordingly
         if (self.orientation==0): self.moveUnitForward(wallAlign)
@@ -607,23 +594,24 @@ class MazeRobot(BrickPi3):
         # centers the robot in the cell front to back
         if (wallAlign and self.getFrontWall()): self.moveCenter()
         
-        return
-    
-    # same thing for the east
-    def moveEast(self, wallAlign=True):
         # check for hazards and walls and update the maze
         if (self.getIrHazard()):
-            self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
+            self.setMazeValue(self.coords[0], self.coords[1]+1, 2)
             self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
                                  "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                  "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
             raise self.Hazard("IR")
         elif (self.getMagnetHazard()):
-            self.setMazeValue(self.coords[0]+1, self.coords[1], 3)
+            self.setMazeValue(self.coords[0], self.coords[1]+1, 3)
             self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
                                  "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                  "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
             raise self.Hazard("Magnet")
+
+        return
+    
+    # same thing for the east
+    def moveEast(self, wallAlign=True):
             
         if (self.orientation==0):
             self.turn(self.squareTurn)
@@ -657,6 +645,20 @@ class MazeRobot(BrickPi3):
 
         # centers the robot in the cell front to back
         if (wallAlign and self.getFrontWall()): self.moveCenter()
+
+        # check for hazards and walls and update the maze
+        if (self.getIrHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
+            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
+                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("IR")
+        elif (self.getMagnetHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 3)
+            self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
+                                 "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("Magnet")
 
         return
     
@@ -707,6 +709,20 @@ class MazeRobot(BrickPi3):
         # centers the robot in the cell front to back
         if (wallAlign and self.getFrontWall()): self.moveCenter()
 
+        # check for hazards and walls and update the maze
+        if (self.getIrHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
+            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
+                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("IR")
+        elif (self.getMagnetHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 3)
+            self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
+                                 "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("Magnet")
+
         return
     
     # and the west
@@ -755,6 +771,20 @@ class MazeRobot(BrickPi3):
 
         # centers the robot in the cell front to back
         if (wallAlign and self.getFrontWall()): self.moveCenter()
+
+        # check for hazards and walls and update the maze
+        if (self.getIrHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
+            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
+                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("IR")
+        elif (self.getMagnetHazard()):
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 3)
+            self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
+                                 "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+            raise self.Hazard("Magnet")
 
         return
     

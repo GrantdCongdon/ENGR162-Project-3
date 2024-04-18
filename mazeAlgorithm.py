@@ -236,10 +236,10 @@ def main():
             try:  westMapValue = robot.getMazeValue(robot.location[0]-1, robot.location[1])
             except IndexError: westMapValue = None
 
-            northMapValue = northMapValue if not northHazard else None
-            eastMapValue = eastMapValue if not eastHazard else None
-            southMapValue = southMapValue if not southHazard else None
-            westMapValue = westMapValue if not westHazard else None
+            northMapValue = northMapValue if not northHazard else -1
+            eastMapValue = eastMapValue if not eastHazard else -1
+            southMapValue = southMapValue if not southHazard else -1
+            westMapValue = westMapValue if not westHazard else -1
 
             print(f"North Wall: {northWall}\tEast Wall: {eastWall}\tSouth Wall: {southWall}\tWest Wall: {westWall}")
             print(f"North Map: {northMapValue}\tEast Map: {eastMapValue}\tSouth Map: {southMapValue}\tWest Map:{westMapValue}")
@@ -251,16 +251,16 @@ def main():
 
             if (move == "north"):
                 try: robot.moveNorth()
-                except robot.Hazard: northMapValue = True
+                except robot.Hazard: northHazard = True
             elif (move == "east"):
                 try: robot.moveEast()
-                except robot.Hazard: eastMapValue = True
+                except robot.Hazard: eastHazard = True
             elif (move == "south"):
                 try: robot.moveSouth()
-                except robot.Hazard: southMapValue = True
+                except robot.Hazard: southHazard = True
             elif (move == "west"):
                 try: robot.moveWest()
-                except robot.Hazard: westMapValue = True
+                except robot.Hazard: westHazard = True
 
             if (robot.exitedMaze):
                 robot.moveUnitForward(wallAlign=False)
@@ -274,6 +274,10 @@ def main():
             robot.reset_all()
             break
     robot.resetAll()
+
+    map = robot.getMap(37, 0, 40, "cm")
+    print(map)
+
     return
 
 if __name__ == "__main__":
