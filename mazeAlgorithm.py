@@ -58,10 +58,18 @@ def randomExplore2(northWall, eastWall, southWall, westWall, northMap, eastMap, 
     if (not southWall): moves.append("south")
     if (not westWall): moves.append("west")
 
-    if (northMap == -1): moves.remove("north")
-    if (eastMap == -1): moves.remove("east")
-    if (southMap == -1): moves.remove("south")
-    if (westMap == -1): moves.remove("west")
+    if (northMap == -1):
+        try: moves.remove("north")
+        except ValueError: pass
+    if (eastMap == -1):
+        try: moves.remove("east")
+        except ValueError: pass
+    if (southMap == -1):
+        try: moves.remove("south")
+        except ValueError: pass
+    if (westMap == -1):
+        try: moves.remove("west")
+        except ValueError: pass
     
     if (len(moves) == 0): return None
     elif (len(moves) == 1): return moves[0]
