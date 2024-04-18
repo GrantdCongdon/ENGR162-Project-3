@@ -389,6 +389,7 @@ class MazeRobot(BrickPi3):
             except (SensorError): continue
         
         sleep(1)
+        print(gyroValue)
         # turn right
         if (gyroValue < degrees):
             # while the gyro value is less than the degrees
@@ -593,7 +594,7 @@ class MazeRobot(BrickPi3):
         
         # sets a maze value of -1 if there is a wall on all sides or if the cell is not a junction
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            ((self.getNorthWall() and self.getSouthWall() and self.getWestWall()) or (self.getNorthWall() and self.getSouthWall() and
+            ((self.getNorthWall() and self.getSouthWall() and self.getEastWall()) or (self.getNorthWall() and self.getSouthWall() and
                                                                                      self.getMazeValue(self.coords[0]-1, self.coords[1])==-1))):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
 
@@ -643,7 +644,7 @@ class MazeRobot(BrickPi3):
             return
         
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            ((self.getEastWall() and self.getWestWall() and self.getNorthWall()) or (self.getEastWall() and self.getWestWall() and
+            ((self.getEastWall() and self.getWestWall() and self.getSouthWall()) or (self.getEastWall() and self.getWestWall() and
                                                                                         self.getMazeValue(self.coords[0], self.coords[1]+1)==-1))):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
         elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
@@ -678,7 +679,6 @@ class MazeRobot(BrickPi3):
             self.turn(self.aboutFace)
             self.moveUnitForward(wallAlign)
             self.orientation = 3
-
         elif (self.orientation==2):
             self.turn(self.squareTurn)
             self.moveUnitForward(wallAlign)
@@ -693,7 +693,7 @@ class MazeRobot(BrickPi3):
             return
         
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            ((self.getNorthWall() and self.getSouthWall() and self.getEastWall()) or (self.getNorthWall() and self.getSouthWall() and
+            ((self.getNorthWall() and self.getSouthWall() and self.getWestWall()) or (self.getNorthWall() and self.getSouthWall() and
                                                                                      self.getMazeValue(self.coords[0]+1, self.coords[1])==-1))):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
         elif (self.getMazeValue(self.coords[0], self.coords[1])==0):

@@ -51,12 +51,17 @@ def randomExplore(northWall, eastWall, southWall, westWall, north, south, east, 
     else:
         return None
     
-def randomExplore2(northWall, eastWall, southWall, westWall, northMap, southMap, eastMap, westMap):
+def randomExplore2(northWall, eastWall, southWall, westWall, northMap, eastMap, southMap, westMap):
     moves = []
     if (not northWall): moves.append("north")
     if (not eastWall): moves.append("east")
     if (not southWall): moves.append("south")
     if (not westWall): moves.append("west")
+
+    if (northMap == -1): moves.remove("north")
+    if (eastMap == -1): moves.remove("east")
+    if (southMap == -1): moves.remove("south")
+    if (westMap == -1): moves.remove("west")
     
     if (len(moves) == 0): return None
     elif (len(moves) == 1): return moves[0]
