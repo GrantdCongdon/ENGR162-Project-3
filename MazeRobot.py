@@ -149,6 +149,9 @@ class MazeRobot(BrickPi3):
         # configure grovepi
         gp.set_bus("RPI_1")
         
+        self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
+        self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
+
         # configure gyro sensor
         self.resetAll()
 
@@ -304,7 +307,7 @@ class MazeRobot(BrickPi3):
     def getMazeValue(self, x: int, y: int):
         y = len(self.maze)-y-1
         try: return self.maze[y][x]
-        except IndexError: -1
+        except IndexError: -5
     
     def resetAll(self):
         # reset motor encoders
@@ -312,13 +315,24 @@ class MazeRobot(BrickPi3):
                                   self.get_motor_encoder(self.rightMotorPort))
         self.offset_motor_encoder(self.leftMotorPort,
                                   self.get_motor_encoder(self.leftMotorPort))
+
+        gyroValue = None
+        while gyroValue is None:
+            try: gyroValue = self.get_sensor(self.gyroPort)[0]
+            except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
+            except (SensorError): continue
         
-        # reset gyro sensor and ultrasonic
-        self.reset_all()
+        while gyroValue != 0:
+            self.reset_all()
+            # calibrate gyro sensor
+            gyroValue = None
+            while gyroValue is None:
+                try: gyroValue = self.get_sensor(self.gyroPort)[0]
+                except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
+                except (SensorError): continue
 
         # reinitialize the sensors
         self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
-        self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
         return
     
     def stopMotors(self):
@@ -381,15 +395,10 @@ class MazeRobot(BrickPi3):
     def turn(self, degrees):
         # reset the motors and sensors
         self.resetAll()
-        # calibrate gyro sensor
-        gyroValue = None
-        while gyroValue is None:
-            try: gyroValue = self.get_sensor(self.gyroPort)[0]
-            except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
-            except (SensorError): continue
         
-        sleep(1)
-        print(gyroValue)
+        # get the gyro value
+        gyroValue = self.get_sensor(self.gyroPort)[0]
+        
         # turn right
         if (gyroValue < degrees):
             # while the gyro value is less than the degrees

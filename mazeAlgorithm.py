@@ -67,32 +67,47 @@ def randomExplore2(northWall, eastWall, southWall, westWall, northMap, eastMap, 
     elif (len(moves) == 1): return moves[0]
     elif (len(moves) == 2):
         if ("north" in moves and "east" in moves):
-            if (northMap == 0 and eastMap != 0): return "north"
+            if (northMap == -5): return "north"
+            elif (eastMap == -5): return "east"
+            elif (northMap == 0 and eastMap != 0): return "north"
             elif (northMap != 0 and eastMap == 0): return "east"
             else: return moves[randint(0, 1)]
         elif ("north" in moves and "south" in moves):
-            if (northMap == 0 and southMap != 0): return "north"
+            if (northMap == -5): return "north"
+            elif (southMap == -5): return "south"
+            elif (northMap == 0 and southMap != 0): return "north"
             elif (northMap != 0 and southMap == 0): return "south"
             else: return moves[randint(0, 1)]
         elif ("north" in moves and "west" in moves):
-            if (northMap == 0 and westMap != 0): return "north"
+            if (northMap == -5): return "north"
+            elif (westMap == -5): return "west"
+            elif (northMap == 0 and westMap != 0): return "north"
             elif (northMap != 0 and westMap == 0): return "west"
             else: return moves[randint(0, 1)]
         elif ("east" in moves and "south" in moves):
-            if (eastMap == 0 and southMap != 0): return "east"
+            if (eastMap == -5): return "east"
+            elif (southMap == -5): return "south"
+            elif (eastMap == 0 and southMap != 0): return "east"
             elif (eastMap != 0 and southMap == 0): return "south"
             else: return moves[randint(0, 1)]
         elif ("east" in moves and "west" in moves):
-            if (eastMap == 0 and westMap != 0): return "east"
+            if (eastMap == -5): return "east"
+            elif (westMap == -5): return "west"
+            elif (eastMap == 0 and westMap != 0): return "east"
             elif (eastMap != 0 and westMap == 0): return "west"
             else: return moves[randint(0, 1)]
         elif ("south" in moves and "west" in moves):
-            if (southMap == 0 and westMap != 0): return "south"
+            if (southMap == -5): return "south"
+            elif (westMap == -5): return "west"
+            elif (southMap == 0 and westMap != 0): return "south"
             elif (southMap != 0 and westMap == 0): return "west"
             else: return moves[randint(0, 1)]
     elif (len(moves) == 3):
         if ("north" not in moves):
-            if (eastMap == 0 and southMap != 0 and westMap != 0): return "east"
+            if (eastMap == -5): return "east"
+            elif (southMap == -5): return "south"
+            elif (westMap == -5): return "west"
+            elif (eastMap == 0 and southMap != 0 and westMap != 0): return "east"
             elif (eastMap != 0 and southMap == 0 and westMap != 0): return "south"
             elif (eastMap != 0 and southMap != 0 and westMap == 0): return "west"
             elif (eastMap == 0 and southMap == 0 and westMap != 0): return moves[randint(0, 1)]
@@ -102,7 +117,10 @@ def randomExplore2(northWall, eastWall, southWall, westWall, northMap, eastMap, 
             elif (eastMap != 0 and southMap == 0 and westMap == 0): return moves[randint(1, 2)]
             else: return moves[randint(0, 2)]
         elif ("east" not in moves):
-            if (northMap == 0 and southMap != 0 and westMap != 0): return "north"
+            if (northMap == -5): return "north"
+            elif (southMap == -5): return "south"
+            elif (westMap == -5): return "west"
+            elif (northMap == 0 and southMap != 0 and westMap != 0): return "north"
             elif (northMap != 0 and southMap == 0 and westMap != 0): return "south"
             elif (northMap != 0 and southMap != 0 and westMap == 0): return "west"
             elif (northMap == 0 and southMap == 0 and westMap != 0): return moves[randint(0, 1)]
@@ -112,7 +130,10 @@ def randomExplore2(northWall, eastWall, southWall, westWall, northMap, eastMap, 
             elif (northMap != 0 and southMap == 0 and westMap == 0): return moves[randint(1, 2)]
             else: return moves[randint(0, 2)]
         elif ("south" not in moves):
-            if (northMap == 0 and eastMap != 0 and westMap != 0): return "north"
+            if (northMap == -5): return "north"
+            elif (eastMap == -5): return "east"
+            elif (westMap == -5): return "west"
+            elif (northMap == 0 and eastMap != 0 and westMap != 0): return "north"
             elif (northMap != 0 and eastMap == 0 and westMap != 0): return "east"
             elif (northMap != 0 and eastMap != 0 and westMap == 0): return "west"
             elif (northMap == 0 and eastMap == 0 and westMap != 0): return moves[randint(0, 1)]
@@ -122,7 +143,10 @@ def randomExplore2(northWall, eastWall, southWall, westWall, northMap, eastMap, 
             elif (northMap != 0 and eastMap == 0 and westMap == 0): return moves[randint(1, 2)]
             else: return moves[randint(0, 2)]
         elif ("west" not in moves):
-            if (northMap == 0 and eastMap != 0 and southMap != 0): return "north"
+            if (northMap == -5): return "north"
+            elif (eastMap == -5): return "east"
+            elif (southMap == -5): return "south"
+            elif (northMap == 0 and eastMap != 0 and southMap != 0): return "north"
             elif (northMap != 0 and eastMap == 0 and southMap != 0): return "east"
             elif (northMap != 0 and eastMap != 0 and southMap == 0): return "south"
             elif (northMap == 0 and eastMap == 0 and southMap != 0): return moves[randint(0, 1)]
@@ -132,7 +156,11 @@ def randomExplore2(northWall, eastWall, southWall, westWall, northMap, eastMap, 
             elif (northMap != 0 and eastMap == 0 and southMap == 0): return moves[randint(1, 2)]
             else: return moves[randint(0, 2)]
     elif (len(moves) == 4):
-        if (northMap == 0 and eastMap != 0 and southMap != 0 and westMap != 0): return "north"
+        if (northMap == -5): return "north"
+        elif (eastMap == -5): return "east"
+        elif (southMap == -5): return "south"
+        elif (westMap == -5): return "west"
+        elif (northMap == 0 and eastMap != 0 and southMap != 0 and westMap != 0): return "north"
         elif (northMap != 0 and eastMap == 0 and southMap != 0 and westMap != 0): return "east"
         elif (northMap != 0 and eastMap != 0 and southMap == 0 and westMap != 0): return "south"
         elif (northMap != 0 and eastMap != 0 and southMap != 0 and westMap == 0): return "west"
@@ -212,7 +240,6 @@ def main():
             move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue)
             print(f"X-coord: {robot.location[0]}\tY-coord: {robot.location[1]}")
             print(move)
-            sleep(1)
 
             if (move == "north"):
                 try: robot.moveNorth()
