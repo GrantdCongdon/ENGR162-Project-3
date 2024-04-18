@@ -306,8 +306,10 @@ class MazeRobot(BrickPi3):
     # set a value for a maze cell
     def getMazeValue(self, x: int, y: int):
         y = len(self.maze)-y-1
+        if (x<0): return -5
+        if (y<0): return -5
         try: return self.maze[y][x]
-        except IndexError: -5
+        except IndexError: return -5
     
     def resetAll(self):
         # reset motor encoders
