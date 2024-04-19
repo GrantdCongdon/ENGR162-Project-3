@@ -387,24 +387,43 @@ class MazeRobot(BrickPi3):
         return
 
     # moves the robot forward by a certain distance
-    def moveUnitForward(self):
+    def moveUnitForward(self, wallAlign=True):
         self.resetAll()
         # calculate the average reading on an encoder (should be 0 for this one)
         averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
                                  self.get_motor_encoder(self.leftMotorPort))/2)
         
+        wallPresent = 0
+
         # while the average encoder reading is less than the distance
         while (averageEncoderReading<self.encoderDistance):
             # get the distances from the ultrasonic sensors
             distances = self.getDistances()
+            if (distances[0] > self.wallDetectThreshold or distances[1] > self.wallDetectThreshold): wallPresent = False
+            else: wallPresent = True
             try:
-                if (distances[2] <= self.centerDistance): break
                 
-                # calculate the error for the tilt alignment
-                tiltError = (self.get_sensor(self.gyroPort)[0])*self.wallAlignProportionalGain
+                # if wall align is true, keep the robot aligned with the wall
+                if wallAlign and wallPresent:
 
-                # set the motor speeds
-                self.setMotorSpeeds(self.motorSpeed+tiltError, self.motorSpeed-tiltError)
+                    if (distances[2] <= self.centerDistance): break
+                    
+                    # calculate the error for the wall alignment
+                    wallError = (distances[0]-
+                                self.wallDistance)*self.wallAlignProportionalGain
+                   
+                    # calculate the error for the tilt alignment
+                    tiltError = (distances[0]-
+                                distances[1])*self.wallAlignProportionalGain
+
+                    # set the motor speeds
+                    self.setMotorSpeeds(self.motorSpeed+tiltError+wallError, self.motorSpeed-tiltError-wallError)
+                else:
+                    # otherwise, just drive forward for a distance
+                    self.setMotorSpeeds(self.motorSpeed, self.motorSpeed)
+
+                    # make sure we don't run into the front wall
+                    if (distances[2] <= self.centerDistance): break
                 
                 # calculate the average encoder reading
                 averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
@@ -417,27 +436,41 @@ class MazeRobot(BrickPi3):
                 break
         
         self.stopMotors()
-
-        distances = self.getDistances()
-        if (distances[0] <= self.wallDetectThreshold and distances[1] <= self.wallDetectThreshold): self.align()
-
         return
     
-    def moveUnitReverse(self):
+    def moveUnitReverse(self, wallAign=True):
         self.resetAll()
         # calculate the average reading on an encoder (should be 0 for this one)
         averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
                                     self.get_motor_encoder(self.leftMotorPort))/2)
+        
+        wallPresent = 0
 
         while (averageEncoderReading<self.encoderDistance):
             # get the distances from the ultrasonic sensors
-            try:
-                # calculate the error for the tilt alignment
-                tiltError = (self.get_sensor(self.gyroPort)[0])*self.wallAlignProportionalGain
-                
-                # set the motor speeds
-                self.setMotorSpeeds(-self.motorSpeed+tiltError, -self.motorSpeed-tiltError)
+            distances = self.getDistances()
+            
+            # check if a wall is present to align with
+            if (distances[0] > self.wallDetectThreshold or distances[1] > self.wallDetectThreshold): wallPresent = False
+            else: wallPresent = True
 
+            try:
+                if wallAign and wallPresent:
+
+                    # calculate the error for how far away the robot is from the wall
+                    wallError = (distances[0]-
+                                self.wallDistance)*self.wallAlignProportionalGain
+                    
+                    # calculate the error for the tilt alignment
+                    tiltError = (distances[0]-
+                                distances[1])*self.wallAlignProportionalGain
+                    
+                    # set the motor speeds
+                    self.setMotorSpeeds(-self.motorSpeed+tiltError+wallError, -self.motorSpeed-tiltError-wallError)
+
+                else:
+                    # otherwise, just drive forward for a distance
+                    self.setMotorSpeeds(-self.motorSpeed, -self.motorSpeed)
 
                 # calculate the average encoder reading
                 averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
@@ -451,10 +484,6 @@ class MazeRobot(BrickPi3):
                 break
 
         self.stopMotors()
-
-        distances = self.getDistances()
-        if (distances[0] <= self.wallDetectThreshold and distances[1] <= self.wallDetectThreshold): self.align()
-
         return
     
     def turn(self, degrees):
@@ -522,10 +551,6 @@ class MazeRobot(BrickPi3):
                     break
 
         self.stopMotors()
-
-        distances = self.getDistances()
-        if (distances[0] <= self.wallDetectThreshold and distances[1] <= self.wallDetectThreshold): self.align()
-
         return
     
     def align(self):
