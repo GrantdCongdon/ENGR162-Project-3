@@ -34,7 +34,7 @@ def main():
         try:
             print(f"Front ultrasonic sensor data: {gp.ultrasonicRead(ULTRASONIC_PORT)}")
             print(f"IR sensor data: {gp.analogRead(IR_PORT)}")
-            print(f"Magnet sensor data: {getIMUData()}")
+            print(f"Magnet sensor data: {getIMUData()}\n")
             sleep(1)
         except KeyboardInterrupt:
             break

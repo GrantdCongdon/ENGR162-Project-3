@@ -417,13 +417,7 @@ class MazeRobot(BrickPi3):
                                 distances[1])*self.wallAlignProportionalGain
 
                     # set the motor speeds
-                    d = self.getDistances()
-                    if (d[0] <= self.wallDetectThreshold and d[1] <= self.wallDetectThreshold):
-                        self.setMotorSpeeds(self.motorSpeed+tiltError+wallError,
-                                            self.motorSpeed-tiltError-wallError)
-                    else:
-                        # otherwise, just drive forward for a distance
-                        self.setMotorSpeeds(self.motorSpeed, self.motorSpeed)
+                    self.setMotorSpeeds(self.motorSpeed+tiltError+wallError, self.motorSpeed-tiltError-wallError)
                 else:
                     # otherwise, just drive forward for a distance
                     self.setMotorSpeeds(self.motorSpeed, self.motorSpeed)
@@ -472,13 +466,8 @@ class MazeRobot(BrickPi3):
                                 distances[1])*self.wallAlignProportionalGain
                     
                     # set the motor speeds
-                    # set the motor speeds
-                    d = self.getDistances()
-                    if (d[0] <= self.wallDetectThreshold and d[1] <= self.wallDetectThreshold):
-                        self.setMotorSpeeds(-self.motorSpeed+tiltError+wallError, -self.motorSpeed-tiltError-wallError)
-                    else:
-                        # otherwise, just drive forward for a distance
-                        self.setMotorSpeeds(-self.motorSpeed, -self.motorSpeed)
+                    self.setMotorSpeeds(-self.motorSpeed+tiltError+wallError, -self.motorSpeed-tiltError-wallError)
+
                 else:
                     # otherwise, just drive forward for a distance
                     self.setMotorSpeeds(-self.motorSpeed, -self.motorSpeed)
@@ -645,10 +634,11 @@ class MazeRobot(BrickPi3):
             self.turn(-self.squareTurn)
             self.moveUnitForward(wallAlign)
             self.orientation = 0
-        elif (self.orientation==2): self.moveUnitReverse(wallAlign)
-            #self.turn(self.aboutFace)
-            #self.moveUnitForward(wallAlign)
-            #self.orientation = 0
+        elif (self.orientation==2):
+            #self.moveUnitReverse(wallAlign)
+            self.turn(self.aboutFace)
+            self.moveUnitForward(wallAlign)
+            self.orientation = 0
         else:
             self.turn(self.squareTurn)
             self.moveUnitForward(wallAlign)
@@ -702,10 +692,10 @@ class MazeRobot(BrickPi3):
             self.moveUnitForward(wallAlign)
             self.orientation = 1
         else:
-            self.moveUnitReverse(wallAlign)
-            #self.turn(self.aboutFace)
-            #self.moveUnitForward(wallAlign)
-            #self.orientation = 1
+            #self.moveUnitReverse(wallAlign)
+            self.turn(self.aboutFace)
+            self.moveUnitForward(wallAlign)
+            self.orientation = 1
         
         # update the coordinates
         self.coords[0] += 1
@@ -759,10 +749,10 @@ class MazeRobot(BrickPi3):
             raise self.Hazard("Magnet")
             
         if (self.orientation==0):
-            self.moveUnitReverse(wallAlign)
-            #self.turn(self.aboutFace)
-            #self.moveUnitForward(wallAlign)
-            #self.orientation = 2
+            #self.moveUnitReverse(wallAlign)
+            self.turn(self.aboutFace)
+            self.moveUnitForward(wallAlign)
+            self.orientation = 2
         elif (self.orientation==1):
             self.turn(self.squareTurn)
             self.moveUnitForward(wallAlign)
@@ -827,10 +817,10 @@ class MazeRobot(BrickPi3):
             self.moveUnitForward(wallAlign)
             self.orientation = 3
         elif (self.orientation==1):
-            self.moveUnitReverse(wallAlign)
-            #self.turn(self.aboutFace)
-            #self.moveUnitForward(wallAlign)
-            #self.orientation = 3
+            #self.moveUnitReverse(wallAlign)
+            self.turn(self.aboutFace)
+            self.moveUnitForward(wallAlign)
+            self.orientation = 3
         elif (self.orientation==2):
             self.turn(self.squareTurn)
             self.moveUnitForward(wallAlign)
