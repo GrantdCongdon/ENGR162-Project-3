@@ -378,7 +378,7 @@ def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, s
         elif (northMap != 0 and eastMap == 0 and southMap == 0 and westMap == 0): return moves[randint(1, 3)]
         else: return moves[randint(0, 3)]
     
-
+# select the algorithm
 bestMove = randomExplore
 
 def main():
@@ -387,11 +387,19 @@ def main():
     eastHazard = False
     southHazard = False
     westHazard = False
+    # wait for the robot to be touched
+    while (not robot.getTouch()): pass
+    
+    # print the initial values
     print(f"North: {0}\tEast: {1}\tSouth: {1}\tWest: {1}")
     print(f"X-coord: {robot.location[0]}\tY-coord: {robot.location[1]}")
     print("north")
     sleep(1)
+
+    # move the robot to north to start the maze
     robot.moveNorth(wallAlign=False)
+    
+    # loop until the robot exits the maze
     while (not robot.exitedMaze):
         try:
             # get the walls around the robot
@@ -410,11 +418,13 @@ def main():
             try:  westMapValue = robot.getMazeValue(robot.location[0]-1, robot.location[1])
             except IndexError: westMapValue = None
 
+            # treats hazards as walls
             northMapValue = northMapValue if not northHazard else -1
             eastMapValue = eastMapValue if not eastHazard else -1
             southMapValue = southMapValue if not southHazard else -1
             westMapValue = westMapValue if not westHazard else -1
 
+            # tells the user what the robot sees
             print(f"North Wall: {northWall}\tEast Wall: {eastWall}\tSouth Wall: {southWall}\tWest Wall: {westWall}")
             print(f"North Map: {northMapValue}\tEast Map: {eastMapValue}\tSouth Map: {southMapValue}\tWest Map:{westMapValue}")
 
@@ -423,6 +433,7 @@ def main():
             print(f"X-coord: {robot.location[0]}\tY-coord: {robot.location[1]}")
             print(move)
 
+            # execute the move
             if (move == "north"):
                 try: robot.moveNorth()
                 except robot.Hazard: northHazard = True
@@ -449,6 +460,7 @@ def main():
             break
     robot.resetAll()
 
+    # print a map of the maze
     map = robot.getMap(37, 0, 40, "cm")
     print(map)
 
