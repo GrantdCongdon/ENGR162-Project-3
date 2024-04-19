@@ -12,6 +12,9 @@ bp.reset_all()
 IR_HAZARD = 25
 MAG_HAZARD = 50
 
+ULTRASONIC_PORT = 4
+IR_PORT = 2
+
 # configure grovepi
 gp.set_bus("RPI_1")
 
@@ -29,8 +32,9 @@ def getIRData():
 def main():
     while True:
         try:
-            print(gp.analogRead(2))
-            print(getIMUData())
+            print(f"Front ultrasonic sensor data: {gp.ultrasonicRead(ULTRASONIC_PORT)}")
+            print(f"IR sensor data: {gp.analogRead(IR_PORT)}")
+            print(f"Magnet sensor data: {getIMUData()}")
             sleep(1)
         except KeyboardInterrupt:
             break
