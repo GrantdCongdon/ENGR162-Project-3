@@ -107,7 +107,7 @@ class MazeRobot(BrickPi3):
     wallDistance = 10
 
     # default center distance
-    centerDistance = 13
+    centerDistance = 12
 
     # default threshold for the wall detection
     wallDetectThreshold = 20
@@ -392,17 +392,19 @@ class MazeRobot(BrickPi3):
         # calculate the average reading on an encoder (should be 0 for this one)
         averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
                                  self.get_motor_encoder(self.leftMotorPort))/2)
+        
+        wallPresent = 0
 
         # while the average encoder reading is less than the distance
         while (averageEncoderReading<self.encoderDistance):
             # get the distances from the ultrasonic sensors
             distances = self.getDistances()
-            if (distances[0] > self.wallDetectThreshold or distances[1] > self.wallDetectThreshold): wallPresent = False
-            else: wallPresent = True
+            if (distances[0] > self.wallDetectThreshold or distances[1] > self.wallDetectThreshold): wallPresent = 0
+            else: wallPresent += 1
             try:
                 
                 # if wall align is true, keep the robot aligned with the wall
-                if wallAlign and wallPresent:
+                if wallAlign and wallPresent>1:
 
                     if (distances[2] <= self.centerDistance): break
                     
@@ -415,8 +417,13 @@ class MazeRobot(BrickPi3):
                                 distances[1])*self.wallAlignProportionalGain
 
                     # set the motor speeds
-                    self.setMotorSpeeds(self.motorSpeed+tiltError+wallError,
-                                        self.motorSpeed-tiltError-wallError)
+                    d = self.getDistances()
+                    if (d[0] <= self.wallDetectThreshold and d[1] <= self.wallDetectThreshold):
+                        self.setMotorSpeeds(self.motorSpeed+tiltError+wallError,
+                                            self.motorSpeed-tiltError-wallError)
+                    else:
+                        # otherwise, just drive forward for a distance
+                        self.setMotorSpeeds(self.motorSpeed, self.motorSpeed)
                 else:
                     # otherwise, just drive forward for a distance
                     self.setMotorSpeeds(self.motorSpeed, self.motorSpeed)
@@ -442,17 +449,19 @@ class MazeRobot(BrickPi3):
         # calculate the average reading on an encoder (should be 0 for this one)
         averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
                                     self.get_motor_encoder(self.leftMotorPort))/2)
+        
+        wallPresent = 0
 
         while (averageEncoderReading<self.encoderDistance):
             # get the distances from the ultrasonic sensors
             distances = self.getDistances()
             
             # check if a wall is present to align with
-            if (distances[0] > self.wallDetectThreshold or distances[1] > self.wallDetectThreshold): wallPresent = False
-            else: wallPresent = True
+            if (distances[0] > self.wallDetectThreshold or distances[1] > self.wallDetectThreshold): wallPresent = 0
+            else: wallPresent += 1
 
             try:
-                if wallAign and wallPresent:
+                if wallAign and wallPresent>1:
 
                     # calculate the error for how far away the robot is from the wall
                     wallError = (distances[0]-
@@ -463,8 +472,13 @@ class MazeRobot(BrickPi3):
                                 distances[1])*self.wallAlignProportionalGain
                     
                     # set the motor speeds
-                    self.setMotorSpeeds(-(self.motorSpeed+tiltError+wallError),
-                                        -(self.motorSpeed-tiltError-wallError))
+                    # set the motor speeds
+                    d = self.getDistances()
+                    if (d[0] <= self.wallDetectThreshold and d[1] <= self.wallDetectThreshold):
+                        self.setMotorSpeeds(-self.motorSpeed+tiltError+wallError, -self.motorSpeed-tiltError-wallError)
+                    else:
+                        # otherwise, just drive forward for a distance
+                        self.setMotorSpeeds(-self.motorSpeed, -self.motorSpeed)
                 else:
                     # otherwise, just drive forward for a distance
                     self.setMotorSpeeds(-self.motorSpeed, -self.motorSpeed)
@@ -551,8 +565,11 @@ class MazeRobot(BrickPi3):
 
         # get the distances from the ultrasonic sensors
         distances = self.getDistances()
+        print(distances)
         if (distances[0] < self.wallDetectThreshold and distances[1] < self.wallDetectThreshold):
+            print("Doing this")
             while (distances[0]-distances[1] == 0):
+                print("Looping")
                 # get the distances from the ultrasonic sensors
                 distances = self.getDistances()
 
@@ -640,7 +657,7 @@ class MazeRobot(BrickPi3):
         # update the coordinates
         self.coords[1] += 1
         if (self.coords[1]>=len(self.maze)):
-            self.setMazeValue(self.coords[0], self.coords[1], 4)
+            self.setMazeValue(self.coords[0], self.coords[1]-1, 4)
             self.exitedMaze = True
             return
         
@@ -693,7 +710,7 @@ class MazeRobot(BrickPi3):
         # update the coordinates
         self.coords[0] += 1
         if (self.coords[0]>=len(self.maze[0])):
-            self.setMazeValue(self.coords[0], self.coords[1], 4)
+            self.setMazeValue(self.coords[0]-1, self.coords[1], 4)
             self.exitedMaze = True
             return
         
@@ -759,7 +776,7 @@ class MazeRobot(BrickPi3):
         # update the coordinates
         self.coords[1] -= 1
         if (self.coords[1]<0):
-            self.setMazeValue(self.coords[0], self.coords[1], 4)
+            self.setMazeValue(self.coords[0], self.coords[1]+1, 4)
             self.exitedMaze = True
             return
         
@@ -823,7 +840,7 @@ class MazeRobot(BrickPi3):
         # update the coordinates
         self.coords[0] -= 1
         if (self.coords[0]<0):
-            self.setMazeValue(self.coords[0], self.coords[1], 4)
+            self.setMazeValue(self.coords[0]+1, self.coords[1], 4)
             self.exitedMaze = True
             return
         

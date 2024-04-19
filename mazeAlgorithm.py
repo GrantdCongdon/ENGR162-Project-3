@@ -315,7 +315,10 @@ def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, s
             elif (northMap == 0 and southMap != 0 and westMap != 0): return "north"
             elif (northMap != 0 and southMap == 0 and westMap != 0): return "south"
             elif (northMap != 0 and southMap != 0 and westMap == 0): return "west"
-            elif (northMap == 0 and southMap == 0 and westMap != 0): return moves[randint(0, 1)]
+            elif (northMap == 0 and southMap == 0 and westMap != 0):
+                if (y > 0): return "north"
+                elif (y < 0): return "south"
+                else: return moves[randint(0, 1)]
             elif (northMap == 0 and southMap != 0 and westMap == 0):
                 x = randint(0, 1)
                 return moves[x if x != 1 else 2]
@@ -382,13 +385,13 @@ def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, s
 bestMove = randomExplore
 
 def main():
-    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, (1, 0), (3, 7))
+    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, (1, 0), (5, 3))
     northHazard = False
     eastHazard = False
     southHazard = False
     westHazard = False
     # wait for the robot to be touched
-    while (not robot.getTouch()): pass
+    #while (not robot.getTouch()): pass
     
     # print the initial values
     print(f"North: {0}\tEast: {1}\tSouth: {1}\tWest: {1}")
@@ -426,6 +429,7 @@ def main():
 
             # tells the user what the robot sees
             print(f"North Wall: {northWall}\tEast Wall: {eastWall}\tSouth Wall: {southWall}\tWest Wall: {westWall}")
+            print(f"North hazard: {northHazard}\tEast hazard: {eastHazard}\tSouth hazard: {southHazard}\tWest hazard: {westHazard}")
             print(f"North Map: {northMapValue}\tEast Map: {eastMapValue}\tSouth Map: {southMapValue}\tWest Map:{westMapValue}")
 
             # get the best move
