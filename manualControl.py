@@ -1,22 +1,22 @@
 from MazeRobot import MazeRobot
 from time import sleep
 def main():
-    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, [0, 0], [6, 6])
+    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, (3, 0), (5, 6))
     while True:
         try:
             command = input("Enter a command: ")
-            if command == "w": robot.moveNorth(wallAlign=True)
-            elif command == "s": robot.moveSouth(wallAlign=False)
-            elif command == "a": robot.moveWest(wallAlign=False)
-            elif command == "d": robot.moveEast(wallAlign=False)
+            if command == "w": robot.moveNorth()
+            elif command == "s": robot.moveSouth()
+            elif command == "a": robot.moveWest()
+            elif command == "d": robot.moveEast()
             elif command == "c": robot.depositCargo()
-            elif command == "s":
+            elif command == "l":
                 commands = [*input("Enter a sequence of commands: ")]
                 for c in commands:
-                    if c == "w": robot.moveNorth(wallAlign=False)
-                    elif c == "s": robot.moveSouth(wallAlign=False)
-                    elif c == "a": robot.moveWest(wallAlign=False)
-                    elif c == "d": robot.moveEast(wallAlign=False)
+                    if c == "w": robot.moveNorth()
+                    elif c == "s": robot.moveSouth()
+                    elif c == "a": robot.moveWest()
+                    elif c == "d": robot.moveEast()
                     elif c == "c": robot.depositCargo()
                     else: print("Invalid command")
             elif command == "m":

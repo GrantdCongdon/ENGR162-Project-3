@@ -4,7 +4,7 @@ from brickpi3 import BrickPi3, SensorError
 from MPU9250 import MPU9250
 from time import sleep, time
 from math import pi
-from statistics import median, mean
+from statistics import median
 
 # class that covers all the aspects of the ENGR161/162 robot
 class MazeRobot(BrickPi3):
@@ -107,7 +107,7 @@ class MazeRobot(BrickPi3):
     wallDistance = 10
 
     # default center distance
-    centerDistance = 13
+    centerDistance = 12
 
     # default threshold for the wall detection
     wallDetectThreshold = 25
@@ -122,7 +122,7 @@ class MazeRobot(BrickPi3):
     exitedMaze = False
 
     # intakes the default ports for the motors, ultrasonics, gyro, and IR sensor
-    def __init__(self, rightMotorPort: int, leftMotorPort: int, cargoPort: int, swivelPort: int, frontAlignDistanceSensorPort: int, rearAlignDistanceSensorPort: int,
+    def __init__(self, rightMotorPort: int, leftMotorPort: int, cargoPort: int, frontAlignDistanceSensorPort: int, rearAlignDistanceSensorPort: int,
                  frontDistanceSensorPort: int, rightDistancePort: int, gyroPort: int, irPort: int, touchPort: int, coords: tuple, mazeSize: tuple,
                  orientation=0):
 
@@ -133,7 +133,6 @@ class MazeRobot(BrickPi3):
         self.rightMotorPort = rightMotorPort
         self.leftMotorPort = leftMotorPort
         self.cargoPort = cargoPort
-        self.swivelPort = swivelPort
         self.frontAlignDistanceSensorPort = frontAlignDistanceSensorPort
         self.rearAlignDistanceSensorPort = rearAlignDistanceSensorPort
         self.frontDistanceSensorPort = frontDistanceSensorPort
@@ -151,24 +150,12 @@ class MazeRobot(BrickPi3):
         # configure grovepi
         gp.set_bus("RPI_1")
         
-        self.reset_all()
         self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
-        self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS)
+        self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
         self.set_sensor_type(self.touchPort, self.SENSOR_TYPE.EV3_TOUCH)
 
         # configure gyro sensor
         self.resetAll()
-
-        swivelMotorEncoder = self.get_motor_encoder(self.swivelPort)
-        while (swivelMotorEncoder != 0):
-            self.offset_motor_encoder(self.swivelPort, self.get_motor_encoder(self.swivelPort))
-            swivelMotorEncoder = self.get_motor_encoder(self.swivelPort)
-
-        gyroValue = None
-        while gyroValue is None:
-            try: gyroValue = self.get_sensor(self.gyroPort)
-            except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
-            except (SensorError): continue
 
     # sets wheel diameter
     def setWheelDiameter(self, diameter: float):
@@ -257,44 +244,31 @@ class MazeRobot(BrickPi3):
         return self.startCoords
 
     # gets the distances measured by each ultrasonic sensor
-    def getDistances(self, sensor):
+    def getDistances(self):
         frontAlignDistanceList = []
         rearAlignDistanceList = []
         frontDistanceList = []
         rightDistanceList = []
 
-        if (sensor == 0):
-            while (len(frontAlignDistanceList) < 10):
-                d = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
-                if (d != 0): frontAlignDistanceList.append(d)
-                sleep(0.05)
-            return median(frontAlignDistanceList)
+        while (len(frontAlignDistanceList) < 20): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
+        frontAlignDistance = median(frontAlignDistanceList)
         
-        elif (sensor == 1):
-            while (len(rearAlignDistanceList) < 10):
-                d = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
-                if (d != 0): rearAlignDistanceList.append(d)
-                sleep(0.05)
-            return median(rearAlignDistanceList)
-        
-        elif (sensor == 2):
-            self.swivel(0)
-            while (len(frontDistanceList) < 10):
-                d = gp.ultrasonicRead(self.frontDistanceSensorPort)
-                if (d != 0): frontDistanceList.append(d)
-                sleep(0.05)
-            return median(frontDistanceList)
-        
-        elif (sensor == 3):
-            self.swivel(1)
-            while (len(rightDistanceList) < 10):
-                d = gp.ultrasonicRead(self.frontDistanceSensorPort)
-                if (d != 0): rightDistanceList.append(d)
-                sleep(0.05)
+        while (len(rearAlignDistanceList) < 20): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
+        rearAlignDistance = median(rearAlignDistanceList)
 
-            return min(rightDistanceList)
-        else:
-            return None
+        while (len(frontDistanceList) < 20): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
+        frontDistance = median(frontDistanceList)
+
+        rightDistance = None
+        while rightDistance is None:
+            try: rightDistance = self.get_sensor(self.rightDistancePort)
+            except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
+            except (SensorError): continue
+        
+        while (len(rightDistanceList) < 50): rightDistanceList.append(self.get_sensor(self.rightDistancePort))
+        rightDistance = median(rightDistanceList)
+
+        return [frontAlignDistance , rearAlignDistance, frontDistance, rightDistance]
     
     # returns whether a IR hazard is detected
     def getIrHazard(self):
@@ -317,22 +291,22 @@ class MazeRobot(BrickPi3):
     
     # returns whether a wall is detected in front of the robot
     def getFrontWall(self):
-        distance = self.getDistances(2)
+        distance = self.getDistances()[2]
         print(f"Front distance: {distance}")
         return (distance <= self.wallDetectThreshold)
     
     # returns whether a wall is detected to the left of the robot
     def getLeftWall(self):
-        distance = self.getDistances(0)
+        distance = self.getDistances()[0]
         print(f"Left distance: {distance}")
         return (distance <= self.wallDetectThreshold)
     
     # returns whether a wall is detected to the right of the robot
     def getRightWall(self):
-        distance = self.getDistances(3)
+        distance = self.getDistances()[3]
         print(f"Right distance: {distance}")
         return (distance <= self.wallDetectThreshold)
-        
+    
     # returns whether a wall is "north" of the robot
     def getNorthWall(self):
         if (self.orientation==0): return self.getFrontWall()
@@ -374,14 +348,35 @@ class MazeRobot(BrickPi3):
         # reset motor encoders
         rightMotorEncoder = self.get_motor_encoder(self.rightMotorPort)
         while (rightMotorEncoder != 0):
-            self.offset_motor_encoder(self.rightMotorPort, self.get_motor_encoder(self.rightMotorPort))
+            self.offset_motor_encoder(self.rightMotorPort,
+                                  self.get_motor_encoder(self.rightMotorPort))
             rightMotorEncoder = self.get_motor_encoder(self.rightMotorPort)
         
         leftMotorEncoder = self.get_motor_encoder(self.leftMotorPort)
         while (leftMotorEncoder != 0):
-            self.offset_motor_encoder(self.leftMotorPort, self.get_motor_encoder(self.leftMotorPort))
+            self.offset_motor_encoder(self.leftMotorPort,
+                                  self.get_motor_encoder(self.leftMotorPort))
             leftMotorEncoder = self.get_motor_encoder(self.leftMotorPort)
+
+
+        gyroValue = None
+        while gyroValue is None:
+            try: gyroValue = self.get_sensor(self.gyroPort)[0]
+            except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
+            except (SensorError): continue
         
+        while gyroValue != 0:
+            self.reset_all()
+            # calibrate gyro sensor
+            gyroValue = None
+            while gyroValue is None:
+                try: gyroValue = self.get_sensor(self.gyroPort)[0]
+                except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
+                except (SensorError): continue
+
+        # reinitialize the sensors
+        self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
+        self.set_sensor_type(self.touchPort, self.SENSOR_TYPE.EV3_TOUCH)
         return
     
     # stops the motors and shuts them off
@@ -390,45 +385,45 @@ class MazeRobot(BrickPi3):
         sleep(0.1)
         self.set_motor_power(self.rightMotorPort+self.leftMotorPort, 0)
         return
-    
-    def swivel(self, position):
-        try:
-            if (position == 0):
-                while (abs(self.get_motor_encoder(self.swivelPort)) > 0):
-                    swivelError = self.get_motor_encoder(self.swivelPort) * 5
-                    self.set_motor_dps(self.swivelPort, -swivelError)
-            elif (position == 1):
-                while (abs(self.get_motor_encoder(self.swivelPort)) < 90):
-                    swivelError = (self.get_motor_encoder(self.swivelPort) - 90) * 2
-                    self.set_motor_dps(self.swivelPort, swivelError)
-            else: pass
-        finally:
-            self.set_motor_dps(self.swivelPort, 0)
-            sleep(0.01)
-            self.set_motor_power(self.swivelPort, 0)
-
-        return
 
     # moves the robot forward by a certain distance
-    def moveUnitForward(self):
+    def moveUnitForward(self, wallAlign=True):
         self.resetAll()
         # calculate the average reading on an encoder (should be 0 for this one)
         averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
                                  self.get_motor_encoder(self.leftMotorPort))/2)
         
-        initialGyroValue = self.get_sensor(self.gyroPort)
-        
+        wallPresent = 0
+
         # while the average encoder reading is less than the distance
         while (averageEncoderReading<self.encoderDistance):
             # get the distances from the ultrasonic sensors
+            distances = self.getDistances()
+            if (distances[0] > self.wallDetectThreshold or distances[1] > self.wallDetectThreshold): wallPresent = False
+            else: wallPresent = True
             try:
-                if (self.getDistances(2) <= self.centerDistance): break
                 
-                # calculate the error for the tilt alignment
-                tiltError = (self.get_sensor(self.gyroPort)-initialGyroValue)*self.wallAlignProportionalGain
+                # if wall align is true, keep the robot aligned with the wall
+                if wallAlign and wallPresent:
 
-                # set the motor speeds
-                self.setMotorSpeeds(self.motorSpeed+tiltError, self.motorSpeed-tiltError)
+                    if (distances[2] <= self.centerDistance): break
+                    
+                    # calculate the error for the wall alignment
+                    wallError = (distances[0]-
+                                self.wallDistance)*self.wallAlignProportionalGain
+                   
+                    # calculate the error for the tilt alignment
+                    tiltError = (distances[0]-
+                                distances[1])*self.wallAlignProportionalGain
+
+                    # set the motor speeds
+                    self.setMotorSpeeds(self.motorSpeed+tiltError+wallError, self.motorSpeed-tiltError-wallError)
+                else:
+                    # otherwise, just drive forward for a distance
+                    self.setMotorSpeeds(self.motorSpeed, self.motorSpeed)
+
+                    # make sure we don't run into the front wall
+                    if (distances[2] <= self.centerDistance): break
                 
                 # calculate the average encoder reading
                 averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
@@ -441,28 +436,41 @@ class MazeRobot(BrickPi3):
                 break
         
         self.stopMotors()
-
-        if (self.getDistances(0) <= self.wallDetectThreshold and self.getDistances(1) <= self.wallDetectThreshold): self.align()
-
         return
     
-    def moveUnitReverse(self):
+    def moveUnitReverse(self, wallAign=True):
         self.resetAll()
         # calculate the average reading on an encoder (should be 0 for this one)
         averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
                                     self.get_motor_encoder(self.leftMotorPort))/2)
         
-        initialGyroValue = self.get_sensor(self.gyroPort)
+        wallPresent = 0
 
         while (averageEncoderReading<self.encoderDistance):
             # get the distances from the ultrasonic sensors
-            try:
-                # calculate the error for the tilt alignment
-                tiltError = (self.get_sensor(self.gyroPort)-initialGyroValue)*self.wallAlignProportionalGain
-                
-                # set the motor speeds
-                self.setMotorSpeeds(-self.motorSpeed+tiltError, -self.motorSpeed-tiltError)
+            distances = self.getDistances()
+            
+            # check if a wall is present to align with
+            if (distances[0] > self.wallDetectThreshold or distances[1] > self.wallDetectThreshold): wallPresent = False
+            else: wallPresent = True
 
+            try:
+                if wallAign and wallPresent:
+
+                    # calculate the error for how far away the robot is from the wall
+                    wallError = (distances[0]-
+                                self.wallDistance)*self.wallAlignProportionalGain
+                    
+                    # calculate the error for the tilt alignment
+                    tiltError = (distances[0]-
+                                distances[1])*self.wallAlignProportionalGain
+                    
+                    # set the motor speeds
+                    self.setMotorSpeeds(-self.motorSpeed+tiltError+wallError, -self.motorSpeed-tiltError-wallError)
+
+                else:
+                    # otherwise, just drive forward for a distance
+                    self.setMotorSpeeds(-self.motorSpeed, -self.motorSpeed)
 
                 # calculate the average encoder reading
                 averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
@@ -476,27 +484,25 @@ class MazeRobot(BrickPi3):
                 break
 
         self.stopMotors()
-
-        if (self.getDistances(0) <= self.wallDetectThreshold and self.getDistances(1) <= self.wallDetectThreshold): self.align()
-
         return
     
     def turn(self, degrees):
+        # reset the motors and sensors
+        self.resetAll()
         
         # get the gyro value
-        initialGyroValue = self.get_sensor(self.gyroPort)
-        gyroValue = initialGyroValue
+        gyroValue = self.get_sensor(self.gyroPort)[0]
         
         # turn right
-        if (gyroValue < initialGyroValue+degrees):
+        if (gyroValue < degrees):
             # while the gyro value is less than the degrees
-            while (gyroValue < initialGyroValue+degrees):
+            while (gyroValue < degrees):
                 try:
                     # get the gyro value
-                    gyroValue = self.get_sensor(self.gyroPort)
+                    gyroValue = self.get_sensor(self.gyroPort)[0]
                     
                     # calculate the error
-                    error = (initialGyroValue+degrees) - gyroValue
+                    error = degrees - gyroValue
                     
                     # calculate the motor speeds
                     rightTurnSpeed = -1*error*self.turnProportionalGain
@@ -518,13 +524,13 @@ class MazeRobot(BrickPi3):
         # turn left
         else:
             # while the gyro value is greater than the degrees
-            while (gyroValue > initialGyroValue+degrees):
+            while (gyroValue > degrees):
                 try:
                     # get the gyro value
-                    gyroValue = self.get_sensor(self.gyroPort)
+                    gyroValue = self.get_sensor(self.gyroPort)[0]
                     
                     # calculate the error
-                    error = (initialGyroValue+degrees) - gyroValue
+                    error = degrees - gyroValue
 
                     # calculate the motor speeds
                     rightTurnSpeed = -1*error*self.turnProportionalGain
@@ -545,9 +551,23 @@ class MazeRobot(BrickPi3):
                     break
 
         self.stopMotors()
+        return
+    
+    def align(self):
+        # get the distances from the ultrasonic sensors
+        distances = self.getDistances()
+        if (distances[0] < self.wallDetectThreshold and distances[1] < self.wallDetectThreshold):
+            while (distances[0]-distances[1] == 0):
+                # get the distances from the ultrasonic sensors
+                distances = self.getDistances()
 
-        if (self.getDistances(0) <= self.wallDetectThreshold and self.getDistances(1) <= self.wallDetectThreshold): self.align()
+                # calculate the error for the tilt alignment
+                tiltError = (distances[0] - distances[1])*100
 
+                # set the motor speeds
+                self.setMotorSpeeds(tiltError, -tiltError)
+
+                distances = self.getDistances()
         return
     
     def depositCargo(self):
@@ -576,20 +596,24 @@ class MazeRobot(BrickPi3):
     
     # moves the robot to the center of the cell
     def moveCenter(self):
+        # get the front distance
+        frontDistance = self.getDistances()[2]
         # move the robot to the center of the cell
-        if (self.getDistances(2)>self.centerDistance):
-            while (self.getDistances(2)>self.centerDistance):
+        if (frontDistance>self.centerDistance):
+            while (frontDistance>self.centerDistance):
                 try:
                     self.setMotorSpeeds(self.centerMotorSpeed, self.centerMotorSpeed)
+                    frontDistance = self.getDistances()[2]
                 except KeyboardInterrupt:
                     self.stopMotors()
                     sleep(0.1)
                     self.reset_all()
                     break
         else:
-            while (self.getDistances(2)<self.centerDistance):
+            while (frontDistance<self.centerDistance):
                 try:
                     self.setMotorSpeeds(-1*self.centerMotorSpeed, -1*self.centerMotorSpeed)
+                    frontDistance = self.getDistances()[2]
                 except KeyboardInterrupt:
                     self.stopMotors()
                     sleep(0.1)
@@ -599,33 +623,23 @@ class MazeRobot(BrickPi3):
         self.stopMotors()
         return
     
-    def align(self):
-        # get the distances from the ultrasonic sensors
-        while (self.getDistances(0)-self.getDistances(1) == -1):
-            # calculate the error for the tilt alignment
-            tiltError = (self.getDistances(0) - self.getDistances(1))*200
-
-            # set the motor speeds
-            self.setMotorSpeeds(tiltError, -tiltError)
-
-        return
-    
     # moves the robot "north"
-    def moveNorth(self):
+    def moveNorth(self, wallAlign=True):
+        
         # check the orientation and turn/move accordingly
-        if (self.orientation==0): self.moveUnitForward()
+        if (self.orientation==0): self.moveUnitForward(wallAlign)
         elif (self.orientation==1):
             self.turn(-self.squareTurn)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 0
         elif (self.orientation==2):
             #self.moveUnitReverse(wallAlign)
             self.turn(self.aboutFace)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 0
         else:
             self.turn(self.squareTurn)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 0
         
         # update the coordinates
@@ -635,21 +649,17 @@ class MazeRobot(BrickPi3):
             self.exitedMaze = True
             return
         
-        northWall = self.getNorthWall()
-        eastWall = self.getEastWall()
-        southWall = self.getSouthWall()
-        westWall = self.getWestWall()
-        
         # sets a maze value of -1 if there is a wall on all sides or if the cell is not a junction
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            ((northWall and eastWall and westWall) or (eastWall and westWall and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1))):
+            ((self.getNorthWall() and self.getEastWall() and self.getWestWall()) or (self.getEastWall() and self.getWestWall() and
+                                                                                     self.getMazeValue(self.coords[0], self.coords[1]-1)==-1))):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
 
         elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
         
         # centers the robot in the cell front to back
-        if (self.getFrontWall()): self.moveCenter()
+        if (wallAlign and self.getFrontWall()): self.moveCenter()
         
         # check for hazards and walls and update the maze
         if (self.getIrHazard()):
@@ -665,23 +675,24 @@ class MazeRobot(BrickPi3):
                                  "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
             raise self.Hazard("Magnet")
 
-        return [northWall, eastWall, southWall, westWall]
+        return
     
     # same thing for the east
-    def moveEast(self):
+    def moveEast(self, wallAlign=True):
+            
         if (self.orientation==0):
             self.turn(self.squareTurn)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 1
-        elif (self.orientation==1): self.moveUnitForward()
+        elif (self.orientation==1): self.moveUnitForward(wallAlign)
         elif (self.orientation==2):
             self.turn(-self.squareTurn)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 1
         else:
             #self.moveUnitReverse(wallAlign)
             self.turn(self.aboutFace)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 1
         
         # update the coordinates
@@ -691,21 +702,17 @@ class MazeRobot(BrickPi3):
             self.exitedMaze = True
             return
         
-        northWall = self.getNorthWall()
-        eastWall = self.getEastWall()
-        southWall = self.getSouthWall()
-        westWall = self.getWestWall()
-        
         # sets a maze value of -1 if there is a wall on all sides or if the cell is not a junction
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            ((northWall and southWall and eastWall) or (northWall and southWall and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1))):
+            ((self.getNorthWall() and self.getSouthWall() and self.getEastWall()) or (self.getNorthWall() and self.getSouthWall() and
+                                                                                     self.getMazeValue(self.coords[0]-1, self.coords[1])==-1))):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
 
         elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back
-        if (self.getFrontWall()): self.moveCenter()
+        if (wallAlign and self.getFrontWall()): self.moveCenter()
 
         # check for hazards and walls and update the maze
         if (self.getIrHazard()):
@@ -721,10 +728,10 @@ class MazeRobot(BrickPi3):
                                  "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
             raise self.Hazard("Magnet")
 
-        return [northWall, eastWall, southWall, westWall]
+        return
     
     # and the south
-    def moveSouth(self):
+    def moveSouth(self, wallAlign=True):
         # check for hazards and walls and update the maze
         if (self.getIrHazard()):
             self.setMazeValue(self.coords[0], self.coords[1]-1, 2)
@@ -742,16 +749,16 @@ class MazeRobot(BrickPi3):
         if (self.orientation==0):
             #self.moveUnitReverse(wallAlign)
             self.turn(self.aboutFace)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 2
         elif (self.orientation==1):
             self.turn(self.squareTurn)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 2
-        elif (self.orientation==2): self.moveUnitForward()
+        elif (self.orientation==2): self.moveUnitForward(wallAlign)
         else:
             self.turn(-self.squareTurn)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 2
         
         # update the coordinates
@@ -761,20 +768,15 @@ class MazeRobot(BrickPi3):
             self.exitedMaze = True
             return
         
-        northWall = self.getNorthWall()
-        eastWall = self.getEastWall()
-        southWall = self.getSouthWall()
-        westWall = self.getWestWall()
-        
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            ((eastWall and westWall and southWall) or (eastWall and westWall and self.getMazeValue(self.coords[0], self.coords[1]+1) == -1))):
+            ((self.getEastWall() and self.getWestWall() and self.getSouthWall()) or (self.getEastWall() and self.getWestWall() and
+                                                                                        self.getMazeValue(self.coords[0], self.coords[1]+1)==-1))):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
-
         elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back
-        if (self.getFrontWall()): self.moveCenter()
+        if (wallAlign and self.getFrontWall()): self.moveCenter()
 
         # check for hazards and walls and update the maze
         if (self.getIrHazard()):
@@ -793,7 +795,7 @@ class MazeRobot(BrickPi3):
         return
     
     # and the west
-    def moveWest(self):
+    def moveWest(self, wallAlign=True):
         # check for hazards and walls and update the maze
         if (self.getIrHazard()):
             self.setMazeValue(self.coords[0]-1, self.coords[1], 2)
@@ -810,18 +812,18 @@ class MazeRobot(BrickPi3):
 
         if (self.orientation==0):
             self.turn(-self.squareTurn)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 3
         elif (self.orientation==1):
             #self.moveUnitReverse(wallAlign)
             self.turn(self.aboutFace)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 3
         elif (self.orientation==2):
             self.turn(self.squareTurn)
-            self.moveUnitForward()
+            self.moveUnitForward(wallAlign)
             self.orientation = 3
-        else: self.moveUnitForward()
+        else: self.moveUnitForward(wallAlign)
         
         # update the coordinates
         self.coords[0] -= 1
@@ -830,20 +832,15 @@ class MazeRobot(BrickPi3):
             self.exitedMaze = True
             return
         
-        northWall = self.getNorthWall()
-        eastWall = self.getEastWall()
-        southWall = self.getSouthWall()
-        westWall = self.getWestWall()
-        
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            ((northWall and southWall and westWall) or (northWall and southWall and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1))):
+            ((self.getNorthWall() and self.getSouthWall() and self.getWestWall()) or (self.getNorthWall() and self.getSouthWall() and
+                                                                                     self.getMazeValue(self.coords[0]+1, self.coords[1])==-1))):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
-        
         elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
             self.setMazeValue(self.coords[0], self.coords[1], 1)
 
         # centers the robot in the cell front to back
-        if (self.getFrontWall()): self.moveCenter()
+        if (wallAlign and self.getFrontWall()): self.moveCenter()
 
         # check for hazards and walls and update the maze
         if (self.getIrHazard()):
@@ -859,15 +856,13 @@ class MazeRobot(BrickPi3):
                                  "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
             raise self.Hazard("Magnet")
 
-        return [northWall, eastWall, southWall, westWall]
+        return
     
     def celebrate(self):
         startTime = time()
         while (time()-startTime<10):
             self.set_motor_dps(self.rightMotorPort, 360)
             self.set_motor_dps(self.leftMotorPort, -360)
-            self.swivel(0)
-            self.swivel(1)
         self.stopMotors()
         sleep(0.1)
         self.reset_all()
