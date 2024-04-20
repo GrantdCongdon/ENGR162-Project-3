@@ -309,7 +309,10 @@ class MazeRobot(BrickPi3):
             else: pass
             sleep(1)
 
-        return (mean(frontAlignDistanceList), mean(rearAlignDistanceList), mean(frontDistanceList), mean(rightDistanceList))
+        global frontWallDistance = mean(frontDistanceList)
+        global leftWallDistance = avg(mean(rearAlignDistanceList), mean(frontAlignDistanceList)
+        global rightWallDistance = mean(rightDistanceList)
+        #return (mean(frontAlignDistanceList), mean(rearAlignDistanceList), mean(frontDistanceList), mean(rightDistanceList))
     
     # returns whether a IR hazard is detected
     def getIrHazard(self):
@@ -331,17 +334,20 @@ class MazeRobot(BrickPi3):
         return self.map
     
     # returns whether a wall is detected in front of the robot
-    def getFrontWall(self,distance):
+    def getFrontWall(self):
+        distance = frontWallDistance
         print(f"Front distance: {distance}")
         return (distance <= self.wallDetectThreshold)
     
     # returns whether a wall is detected to the left of the robot
-    def getLeftWall(self,distance):
+    def getLeftWall(self):
+        distance = leftWallDistance
         print(f"Left distance: {distance}")
         return (distance <= self.wallDetectThreshold)
     
     # returns whether a wall is detected to the right of the robot
-    def getRightWall(self,distance):
+    def getRightWall(self):
+        distance = rightWallDistance
         print(f"Right distance: {distance}")
         return (distance <= self.wallDetectThreshold)
         
