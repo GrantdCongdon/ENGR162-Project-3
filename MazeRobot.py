@@ -310,7 +310,7 @@ class MazeRobot(BrickPi3):
             sleep(1)
 
         self.frontWallDistance = mean(frontDistanceList)
-        self.leftWallDistance = avg(mean(rearAlignDistanceList), mean(frontAlignDistanceList))
+        self.leftWallDistance = mean([mean(rearAlignDistanceList), mean(frontAlignDistanceList)])
         self.rightWallDistance = mean(rightDistanceList)
         #return (mean(frontAlignDistanceList), mean(rearAlignDistanceList), mean(frontDistanceList), mean(rightDistanceList))
     
@@ -335,19 +335,19 @@ class MazeRobot(BrickPi3):
     
     # returns whether a wall is detected in front of the robot
     def getFrontWall(self):
-        distance = frontWallDistance
+        distance = self.frontWallDistance
         print(f"Front distance: {distance}")
         return (distance <= self.wallDetectThreshold)
     
     # returns whether a wall is detected to the left of the robot
     def getLeftWall(self):
-        distance = leftWallDistance
+        distance = self.leftWallDistance
         print(f"Left distance: {distance}")
         return (distance <= self.wallDetectThreshold)
     
     # returns whether a wall is detected to the right of the robot
     def getRightWall(self):
-        distance = rightWallDistance
+        distance = self.rightWallDistance
         print(f"Right distance: {distance}")
         return (distance <= self.wallDetectThreshold)
         
