@@ -309,9 +309,9 @@ class MazeRobot(BrickPi3):
             else: pass
             sleep(1)
 
-        global frontWallDistance = mean(frontDistanceList)
-        global leftWallDistance = avg(mean(rearAlignDistanceList), mean(frontAlignDistanceList)
-        global rightWallDistance = mean(rightDistanceList)
+        self.frontWallDistance = mean(frontDistanceList)
+        self.leftWallDistance = avg(mean(rearAlignDistanceList), mean(frontAlignDistanceList))
+        self.rightWallDistance = mean(rightDistanceList)
         #return (mean(frontAlignDistanceList), mean(rearAlignDistanceList), mean(frontDistanceList), mean(rightDistanceList))
     
     # returns whether a IR hazard is detected
