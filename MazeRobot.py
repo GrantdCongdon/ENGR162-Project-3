@@ -110,7 +110,7 @@ class MazeRobot(BrickPi3):
     centerDistance = 15
 
     # default threshold for the wall detection
-    wallDetectThreshold = 40
+    wallDetectThreshold = 37
 
     # define 90 degree turn
     squareTurn = 90

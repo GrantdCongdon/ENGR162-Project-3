@@ -652,16 +652,24 @@ def main():
 
             # execute the move
             if (move == "north"):
-                try: robot.moveNorth()
+                try:
+                    robot.moveNorth()
+                    northHazard = False
                 except robot.Hazard: northHazard = True
             elif (move == "east"):
-                try: robot.moveEast()
+                try:
+                    robot.moveEast()
+                    eastHazard = False
                 except robot.Hazard: eastHazard = True
             elif (move == "south"):
-                try: robot.moveSouth()
+                try:
+                    robot.moveSouth()
+                    southHazard = False
                 except robot.Hazard: southHazard = True
             elif (move == "west"):
-                try: robot.moveWest()
+                try:
+                    robot.moveWest()
+                    westHazard = False
                 except robot.Hazard: westHazard = True
 
             if (robot.exitedMaze):
@@ -669,6 +677,7 @@ def main():
                 robot.depositCargo()
                 robot.celebrate()
                 break
+
 
         except KeyboardInterrupt:
             robot.stopMotors()
