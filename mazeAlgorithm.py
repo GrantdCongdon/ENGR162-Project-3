@@ -613,6 +613,7 @@ def main():
     sleep(1)
 
     # move the robot to north to start the maze
+    robot.oneTimeGetDistances()
     robot.moveNorth()
     
     # loop until the robot exits the maze
