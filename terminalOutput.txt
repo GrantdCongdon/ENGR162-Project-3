@@ -1,0 +1,126 @@
+North: 0        East: 1 South: 1        West: 1
+X-coord: 3      Y-coord: 0
+north
+[92, 98, 98, 82, 170, 98, 113, 107, 98, 98, 99, 98, 98, 116, 174, 174, 120, 98, 174, 173] [166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 166.4, 59.0, 59.0, 59.0, 59.0, 59.0, 59.0, 63.0, 63.0, 63.0, 63.0, 63.0, 63.0, 63.0, 63.0, 63.0, 63.0, 63.0, 63.0, 63.0, 63.0]
+Front wall distance is 98.5. Right wall distance is 114.7
+Front distance: 98.5
+Right distance: 114.7
+Front distance: 98.5
+[134, 134, 134, 135, 134, 67, 135, 134, 135, 135, 134, 134, 134, 134, 134, 135, 134, 134, 135, 134] [12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 12.8, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0, 13.0]
+Front wall distance is 134.0. Right wall distance is 12.9
+Front distance: 134.0
+Right distance: 12.9
+Left distance: 15.5
+North Wall: False       East Wall: True South Wall: False       West Wall: True
+North hazard: False     East hazard: False      South hazard: False     West hazard: False
+North Map: 0    East Map: 0     South Map: 5    West Map:0
+X-coord: 3      Y-coord: 1
+north
+Front distance: 134.0
+Right distance: 12.9
+Left distance: 15.5
+Front distance: 134.0
+[43, 42, 44, 57, 51, 43, 51, 47, 58, 42, 59, 52, 52, 46, 60, 53, 95, 62, 55, 54] [56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 56.3, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7, 53.7]
+Front wall distance is 52.0. Right wall distance is 55.0
+Front distance: 52.0
+Right distance: 55.0
+Left distance: 86.0
+North Wall: False       East Wall: False        South Wall: False       West Wall: False
+North hazard: False     East hazard: False      South hazard: False     West hazard: False
+North Map: 0    East Map: 0     South Map: 1    West Map:0
+X-coord: 3      Y-coord: 2
+west
+Right distance: 55.0
+Right distance: 55.0
+Front distance: 52.0
+[95, 79, 96, 85, 96, 83, 96, 73, 79, 95, 96, 82, 80, 95, 83, 95, 82, 95, 75, 90] [16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 16.6, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3, 17.3]
+Front wall distance is 87.5. Right wall distance is 16.950000000000003
+Right distance: 16.950000000000003
+Left distance: 10.5
+Front distance: 87.5
+North Wall: True        East Wall: False        South Wall: True        West Wall: False
+North hazard: False     East hazard: False      South hazard: False     West hazard: False
+North Map: 0    East Map: 1     South Map: 0    West Map:0
+X-coord: 2      Y-coord: 2
+west
+Right distance: 16.950000000000003
+Left distance: 10.5
+Front distance: 87.5
+Right distance: 16.950000000000003
+Left distance: 10.5
+Front distance: 87.5
+[57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57] [138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 138.9, 134.9, 134.9, 134.9, 134.9, 134.9, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3, 99.3]
+Front wall distance is 57.0. Right wall distance is 136.9
+Right distance: 136.9
+Left distance: 11.5
+Front distance: 57.0
+North Wall: False       East Wall: False        South Wall: True        West Wall: False
+North hazard: False     East hazard: False      South hazard: False     West hazard: False
+North Map: 0    East Map: 1     South Map: 0    West Map:0
+X-coord: 1      Y-coord: 2
+north
+Front distance: 57.0
+Right distance: 136.9
+Front distance: 57.0
+[92, 50, 90, 46, 92, 92, 48, 51, 92, 92, 93, 85, 93, 92, 92, 85, 50, 92, 88, 92] [6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 6.3, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4, 7.4]
+Front wall distance is 92.0. Right wall distance is 6.85
+Front distance: 92.0
+Right distance: 6.85
+Left distance: 17.5
+North Wall: False       East Wall: True South Wall: False       West Wall: True
+North hazard: False     East hazard: False      South hazard: False     West hazard: False
+North Map: 0    East Map: 0     South Map: 1    West Map:0
+X-coord: 1      Y-coord: 3
+north
+Front distance: 92.0
+Right distance: 6.85
+Left distance: 17.5
+Front distance: 92.0
+[53, 53, 53, 54, 53, 53, 54, 53, 53, 53, 54, 54, 54, 53, 53, 53, 53, 53, 53, 53] [41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 41.8, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3, 48.3]
+Front wall distance is 53.0. Right wall distance is 45.05
+Front distance: 53.0
+Right distance: 45.05
+Left distance: 18.5
+North Wall: False       East Wall: False        South Wall: False       West Wall: True
+North hazard: False     East hazard: False      South hazard: False     West hazard: False
+North Map: 0    East Map: 0     South Map: 1    West Map:0
+X-coord: 1      Y-coord: 4
+north
+Front distance: 53.0
+Right distance: 45.05
+Front distance: 53.0
+[15, 14, 16, 15, 16, 16, 15, 16, 15, 15, 15, 15, 16, 15, 15, 16, 15, 16, 16, 15] [78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 78.0, 55.3, 55.3, 55.3, 55.3, 55.3, 55.3, 55.3, 55.3, 55.3, 55.3, 41.0, 41.0, 41.0, 41.0, 41.0, 41.0, 41.0, 41.0, 41.0, 41.0]
+Front wall distance is 15.0. Right wall distance is 66.65
+Front distance: 15.0
+Right distance: 66.65
+Left distance: 45.25
+North Wall: True        East Wall: False        South Wall: False       West Wall: False
+North hazard: False     East hazard: False      South hazard: False     West hazard: False
+North Map: -5   East Map: 0     South Map: 1    West Map:0
+X-coord: 1      Y-coord: 5
+west
+Right distance: 66.65
+Right distance: 66.65
+Front distance: 15.0
+[14, 15, 14, 14, 15, 14, 15, 15, 14, 15, 14, 15, 14, 14, 15, 14, 15, 15, 14, 15] [49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 49.1, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7, 35.7]
+Front wall distance is 14.5. Right wall distance is 42.400000000000006
+Right distance: 42.400000000000006
+Left distance: 92.5
+Front distance: 14.5
+North Wall: False       East Wall: False        South Wall: False       West Wall: True
+North hazard: False     East hazard: False      South hazard: False     West hazard: False
+North Map: -5   East Map: 1     South Map: 0    West Map:-5
+X-coord: 0      Y-coord: 5
+north
+^C^CTeam Number: 37
+Map Number: 0
+Unit Length: 40
+Unit: cm
+Origin: (3, 0)
+Notes: None
+4, 1, 0, 0, 0, 
+0, 1, 0, 0, 0, 
+0, 1, 0, 0, 0, 
+0, 1, 1, 1, 0, 
+0, 0, 0, 1, 0, 
+0, 0, 0, 5, 0, 
