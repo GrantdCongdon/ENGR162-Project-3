@@ -146,7 +146,7 @@ def randomExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, s
         else: return moves[randint(0, 3)]
 
 
-def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, southMap, westMap, coords, endCoords):
+def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, southMap, westMap, coords: tuple, endCoords: tuple):
     moves = []
 
     # calculate vector to end of maze
@@ -595,10 +595,10 @@ def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, s
             else: None
 
 # select the algorithm
-bestMove = randomExplore
+bestMove = rankedExplore
 
 def main():
-    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, (0, 0), (3, 6))
+    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, (3, 0), (5, 6))
     northHazard = False
     eastHazard = False
     southHazard = False
@@ -613,7 +613,7 @@ def main():
     sleep(1)
 
     # move the robot to north to start the maze
-    robot.moveNorth(wallAlign=False)
+    robot.moveNorth()
     
     # loop until the robot exits the maze
     while (not robot.exitedMaze):
@@ -646,7 +646,7 @@ def main():
             print(f"North Map: {northMapValue}\tEast Map: {eastMapValue}\tSouth Map: {southMapValue}\tWest Map:{westMapValue}")
 
             # get the best move
-            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue)
+            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (0, 3))
             print(f"X-coord: {robot.location[0]}\tY-coord: {robot.location[1]}")
             print(move)
 
@@ -665,7 +665,7 @@ def main():
                 except robot.Hazard: westHazard = True
 
             if (robot.exitedMaze):
-                robot.moveUnitForward(wallAlign=False)
+                robot.moveUnitForward()
                 robot.depositCargo()
                 robot.celebrate()
                 break
