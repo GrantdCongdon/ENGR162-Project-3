@@ -76,7 +76,7 @@ class MazeRobot(BrickPi3):
     wheelDiameter = 4.2
 
     # define distance of 1 unit
-    unitDistance = 37
+    unitDistance = 40
 
     # defines the default motor speed to go forward at
     motorSpeed = -200
@@ -257,14 +257,17 @@ class MazeRobot(BrickPi3):
         frontDistanceList = []
         rightDistanceList = []
         if (sensor == 0):
-            while (len(frontAlignDistanceList) < 50): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
-            return median(frontAlignDistanceList)
+            while (len(frontAlignDistanceList) < 100): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
+            return mean(frontAlignDistanceList)
+        
         elif (sensor == 1):
-            while (len(rearAlignDistanceList) < 50): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
-            return median(rearAlignDistanceList)
+            while (len(rearAlignDistanceList) < 100): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
+            return mean(rearAlignDistanceList)
+        
         elif (sensor == 2):
-            while (len(frontDistanceList) < 50): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
-            return median(frontDistanceList)
+            while (len(frontDistanceList) < 100): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
+            return mean(frontDistanceList)
+        
         elif (sensor == 3):
             rightDistance = None
             while rightDistance is None:
@@ -278,7 +281,7 @@ class MazeRobot(BrickPi3):
                 else: pass
                 sleep(0.1)
 
-            return median(rightDistanceList)
+            return min(rightDistanceList)
         else:
             return None
     
