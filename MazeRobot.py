@@ -257,29 +257,35 @@ class MazeRobot(BrickPi3):
         frontDistanceList = []
         rightDistanceList = []
         if (sensor == 0):
-            while (len(frontAlignDistanceList) < 100): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
-            return mean(frontAlignDistanceList)
+            while (len(frontAlignDistanceList) < 20):
+                frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
+                sleep(0.05)
+            return median(frontAlignDistanceList)
         
         elif (sensor == 1):
-            while (len(rearAlignDistanceList) < 100): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
-            return mean(rearAlignDistanceList)
+            while (len(rearAlignDistanceList) < 20):
+                rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
+                sleep(0.05)
+            return median(rearAlignDistanceList)
         
         elif (sensor == 2):
-            while (len(frontDistanceList) < 100): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
-            return mean(frontDistanceList)
+            while (len(frontDistanceList) < 10):
+                frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
+                sleep(0.05)
+            return median(frontDistanceList)
         
         elif (sensor == 3):
-            rightDistance = None
+            """rightDistance = None
             while rightDistance is None:
                 try: rightDistance = self.get_sensor(self.rightDistancePort)
                 except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
-                except (SensorError): continue
+                except (SensorError): continue"""
         
             while (len(rightDistanceList) < 50):
                 d = self.get_sensor(self.rightDistancePort)
                 if (int(d) != 255): rightDistanceList.append(d)
                 else: pass
-                sleep(0.1)
+                sleep(0.05)
 
             return min(rightDistanceList)
         else:
@@ -544,13 +550,12 @@ class MazeRobot(BrickPi3):
     
     def align(self):
         # get the distances from the ultrasonic sensors
-        if (self.getDistances(0) < self.wallDetectThreshold and self.getDistances(1) < self.wallDetectThreshold):
-            while (self.getDistances(0)-self.getDistances(1) == -1):
-                # calculate the error for the tilt alignment
-                tiltError = (self.getDistances(0) - self.getDistances(1))*200
+        while (self.getDistances(0)-self.getDistances(1) == -1):
+            # calculate the error for the tilt alignment
+            tiltError = (self.getDistances(0) - self.getDistances(1))*200
 
-                # set the motor speeds
-                self.setMotorSpeeds(tiltError, -tiltError)
+            # set the motor speeds
+            self.setMotorSpeeds(tiltError, -tiltError)
 
         return
     
@@ -580,24 +585,20 @@ class MazeRobot(BrickPi3):
     
     # moves the robot to the center of the cell
     def moveCenter(self):
-        # get the front distance
-        frontDistance = self.getDistances(2)
         # move the robot to the center of the cell
-        if (frontDistance>self.centerDistance):
-            while (frontDistance>self.centerDistance):
+        if (self.getDistances(2)>self.centerDistance):
+            while (self.getDistances(2)>self.centerDistance):
                 try:
                     self.setMotorSpeeds(self.centerMotorSpeed, self.centerMotorSpeed)
-                    frontDistance = self.getDistances(2)
                 except KeyboardInterrupt:
                     self.stopMotors()
                     sleep(0.1)
                     self.reset_all()
                     break
         else:
-            while (frontDistance<self.centerDistance):
+            while (self.getDistances(2)<self.centerDistance):
                 try:
                     self.setMotorSpeeds(-1*self.centerMotorSpeed, -1*self.centerMotorSpeed)
-                    frontDistance = self.getDistances(2)
                 except KeyboardInterrupt:
                     self.stopMotors()
                     sleep(0.1)
@@ -609,7 +610,6 @@ class MazeRobot(BrickPi3):
     
     # moves the robot "north"
     def moveNorth(self):
-        
         # check the orientation and turn/move accordingly
         if (self.orientation==0): self.moveUnitForward()
         elif (self.orientation==1):
