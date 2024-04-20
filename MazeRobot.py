@@ -290,28 +290,33 @@ class MazeRobot(BrickPi3):
         rearAlignDistanceList = []
         frontDistanceList = []
         rightDistanceList = []
-    
-        while (len(frontAlignDistanceList) < 100): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
+
+        for x in range(2):
         
-        while (len(rearAlignDistanceList) < 100): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
+            while (len(frontAlignDistanceList) < 10): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
         
-        while (len(frontDistanceList) < 100): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
+            while (len(rearAlignDistanceList) < 10): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
+        
+            while (len(frontDistanceList) < 10): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
             
-        rightDistance = None
-        while rightDistance is None:
-            try: rightDistance = self.get_sensor(self.rightDistancePort)
-            except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
-            except (SensorError): continue
+            rightDistance = None
+            while rightDistance is None:
+                try: rightDistance = self.get_sensor(self.rightDistancePort)
+                except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
+                except (SensorError): continue
         
-        while (len(rightDistanceList) < 50):
-            d = self.get_sensor(self.rightDistancePort)
-            if (int(d) != 255): rightDistanceList.append(d)
-            else: pass
+            while (len(rightDistanceList) < 20):
+                d = self.get_sensor(self.rightDistancePort)
+                if (int(d) != 255): rightDistanceList.append(d)
+                else: pass
+            
             sleep(1)
 
-        self.frontWallDistance = mean(frontDistanceList)
-        self.leftWallDistance = mean([mean(rearAlignDistanceList), mean(frontAlignDistanceList)])
-        self.rightWallDistance = mean(rightDistanceList)
+        self.frontWallDistance = median(frontDistanceList)
+        self.leftWallDistance = mean([median(rearAlignDistanceList), median(frontAlignDistanceList)])
+        self.rightWallDistance = median(rightDistanceList)
+        print(frontDistanceList, rightDistanceList)
+        printf("Front wall distance is {frontWallDistance}. Right wall distance is {rightWallDistance}")
         #return (mean(frontAlignDistanceList), mean(rearAlignDistanceList), mean(frontDistanceList), mean(rightDistanceList))
     
     # returns whether a IR hazard is detected
