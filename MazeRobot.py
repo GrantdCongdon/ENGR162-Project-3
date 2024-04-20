@@ -152,7 +152,7 @@ class MazeRobot(BrickPi3):
         
         self.reset_all()
         self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
-        self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
+        self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS)
         self.set_sensor_type(self.touchPort, self.SENSOR_TYPE.EV3_TOUCH)
 
         # configure gyro sensor
@@ -160,7 +160,7 @@ class MazeRobot(BrickPi3):
 
         gyroValue = None
         while gyroValue is None:
-            try: gyroValue = self.get_sensor(self.gyroPort)[0]
+            try: gyroValue = self.get_sensor(self.gyroPort)
             except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
             except (SensorError): continue
 
@@ -382,7 +382,7 @@ class MazeRobot(BrickPi3):
 
         """gyroValue = None
         while gyroValue is None:
-            try: gyroValue = self.get_sensor(self.gyroPort)[0]
+            try: gyroValue = self.get_sensor(self.gyroPort)
             except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
             except (SensorError): continue
         
@@ -391,7 +391,7 @@ class MazeRobot(BrickPi3):
             # calibrate gyro sensor
             gyroValue = None
             while gyroValue is None:
-                try: gyroValue = self.get_sensor(self.gyroPort)[0]
+                try: gyroValue = self.get_sensor(self.gyroPort)
                 except OSError: self.set_sensor_type(self.gyroPort, self.SENSOR_TYPE.EV3_GYRO_ABS_DPS)
                 except (SensorError): continue
 
@@ -414,7 +414,7 @@ class MazeRobot(BrickPi3):
         averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
                                  self.get_motor_encoder(self.leftMotorPort))/2)
         
-        initialGyroValue = self.get_sensor(self.gyroPort)[0]
+        initialGyroValue = self.get_sensor(self.gyroPort)
         
         # while the average encoder reading is less than the distance
         while (averageEncoderReading<self.encoderDistance):
@@ -423,7 +423,7 @@ class MazeRobot(BrickPi3):
                 if (self.getDistances(2) <= self.centerDistance): break
                 
                 # calculate the error for the tilt alignment
-                tiltError = (self.get_sensor(self.gyroPort)[0]-initialGyroValue)*self.wallAlignProportionalGain
+                tiltError = (self.get_sensor(self.gyroPort)-initialGyroValue)*self.wallAlignProportionalGain
 
                 # set the motor speeds
                 self.setMotorSpeeds(self.motorSpeed+tiltError, self.motorSpeed-tiltError)
@@ -450,13 +450,13 @@ class MazeRobot(BrickPi3):
         averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
                                     self.get_motor_encoder(self.leftMotorPort))/2)
         
-        initialGyroValue = self.get_sensor(self.gyroPort)[0]
+        initialGyroValue = self.get_sensor(self.gyroPort)
 
         while (averageEncoderReading<self.encoderDistance):
             # get the distances from the ultrasonic sensors
             try:
                 # calculate the error for the tilt alignment
-                tiltError = (self.get_sensor(self.gyroPort)[0]-initialGyroValue)*self.wallAlignProportionalGain
+                tiltError = (self.get_sensor(self.gyroPort)-initialGyroValue)*self.wallAlignProportionalGain
                 
                 # set the motor speeds
                 self.setMotorSpeeds(-self.motorSpeed+tiltError, -self.motorSpeed-tiltError)
@@ -482,7 +482,7 @@ class MazeRobot(BrickPi3):
     def turn(self, degrees):
         
         # get the gyro value
-        initialGyroValue = self.get_sensor(self.gyroPort)[0]
+        initialGyroValue = self.get_sensor(self.gyroPort)
         gyroValue = initialGyroValue
         
         # turn right
@@ -491,7 +491,7 @@ class MazeRobot(BrickPi3):
             while (gyroValue < initialGyroValue+degrees):
                 try:
                     # get the gyro value
-                    gyroValue = self.get_sensor(self.gyroPort)[0]
+                    gyroValue = self.get_sensor(self.gyroPort)
                     
                     # calculate the error
                     error = (initialGyroValue+degrees) - gyroValue
@@ -519,7 +519,7 @@ class MazeRobot(BrickPi3):
             while (gyroValue > initialGyroValue+degrees):
                 try:
                     # get the gyro value
-                    gyroValue = self.get_sensor(self.gyroPort)[0]
+                    gyroValue = self.get_sensor(self.gyroPort)
                     
                     # calculate the error
                     error = (initialGyroValue+degrees) - gyroValue
