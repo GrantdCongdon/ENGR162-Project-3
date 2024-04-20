@@ -293,11 +293,11 @@ class MazeRobot(BrickPi3):
 
         for x in range(2):
         
-            while (len(frontAlignDistanceList) < 10): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
+            while (len(frontAlignDistanceList) < (10 + 10*x)): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
         
-            while (len(rearAlignDistanceList) < 10): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
+            while (len(rearAlignDistanceList) < (10 + 10*x)): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
         
-            while (len(frontDistanceList) < 10): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
+            while (len(frontDistanceList) < (10+10*x)): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
             
             rightDistance = None
             while rightDistance is None:
@@ -305,7 +305,7 @@ class MazeRobot(BrickPi3):
                 except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
                 except (SensorError): continue
         
-            while (len(rightDistanceList) < 20):
+            while (len(rightDistanceList) < (20+20*x)):
                 d = self.get_sensor(self.rightDistancePort)
                 if (int(d) != 255): rightDistanceList.append(d)
                 else: pass
@@ -315,8 +315,8 @@ class MazeRobot(BrickPi3):
         self.frontWallDistance = median(frontDistanceList)
         self.leftWallDistance = mean([median(rearAlignDistanceList), median(frontAlignDistanceList)])
         self.rightWallDistance = median(rightDistanceList)
-        print(frontDistanceList, rightDistanceList)
-        printf("Front wall distance is {frontWallDistance}. Right wall distance is {rightWallDistance}")
+        print(self.frontDistanceList, self.rightDistanceList)
+        print(f"Front wall distance is {self.frontWallDistance}. Right wall distance is {self.rightWallDistance}")
         #return (mean(frontAlignDistanceList), mean(rearAlignDistanceList), mean(frontDistanceList), mean(rightDistanceList))
     
     # returns whether a IR hazard is detected
