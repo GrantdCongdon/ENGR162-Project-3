@@ -110,7 +110,7 @@ class MazeRobot(BrickPi3):
     centerDistance = 15
 
     # default threshold for the wall detection
-    wallDetectThreshold = 37
+    wallDetectThreshold = 25
 
     # define 90 degree turn
     squareTurn = 90
@@ -257,13 +257,13 @@ class MazeRobot(BrickPi3):
         frontDistanceList = []
         rightDistanceList = []
 
-        while (len(frontAlignDistanceList) < 30): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
+        while (len(frontAlignDistanceList) < 50): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
         frontAlignDistance = median(frontAlignDistanceList)
         
-        while (len(rearAlignDistanceList) < 30): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
+        while (len(rearAlignDistanceList) < 50): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
         rearAlignDistance = median(rearAlignDistanceList)
 
-        while (len(frontDistanceList) < 30): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
+        while (len(frontDistanceList) < 50): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
         frontDistance = median(frontDistanceList)
 
         rightDistance = None
@@ -271,11 +271,12 @@ class MazeRobot(BrickPi3):
             try: rightDistance = self.get_sensor(self.rightDistancePort)
             except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
             except (SensorError): continue
-        while (len(rightDistanceList) < 300):
+        while (len(rightDistanceList) < 5):
             d = self.get_sensor(self.rightDistancePort)
             if (int(d) != 255): rightDistanceList.append(d)
             else: pass
-        rightDistance = median(rightDistanceList)
+            sleep(1)
+        rightDistance = mean(rightDistanceList)
 
         return [frontAlignDistance , rearAlignDistance, frontDistance, rightDistance]
     
@@ -409,7 +410,9 @@ class MazeRobot(BrickPi3):
             # get the distances from the ultrasonic sensors
             distances = self.getDistances()
             try:
-                if (distances[2] <= self.centerDistance): break
+                if (distances[2] <= self.centerDistance):
+                    print(distances[2])
+                    break
                 
                 # calculate the error for the tilt alignment
                 tiltError = (self.get_sensor(self.gyroPort)[0]-initialGyroValue)*self.wallAlignProportionalGain
