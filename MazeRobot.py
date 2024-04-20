@@ -257,15 +257,15 @@ class MazeRobot(BrickPi3):
         frontDistanceList = []
         rightDistanceList = []
         if (sensor == 0):
-            while (len(frontAlignDistanceList) < 100): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
+            while (len(frontAlignDistanceList) < 10): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
             return mean(frontAlignDistanceList)
         
         elif (sensor == 1):
-            while (len(rearAlignDistanceList) < 100): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
+            while (len(rearAlignDistanceList) < 10): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
             return mean(rearAlignDistanceList)
         
         elif (sensor == 2):
-            while (len(frontDistanceList) < 100): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
+            while (len(frontDistanceList) < 10): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
             return mean(frontDistanceList)
         
         elif (sensor == 3):
@@ -275,11 +275,11 @@ class MazeRobot(BrickPi3):
                 except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
                 except (SensorError): continue
         
-            while (len(rightDistanceList) < 50):
+            while (len(rightDistanceList) < 10):
                 d = self.get_sensor(self.rightDistancePort)
                 if (int(d) != 255): rightDistanceList.append(d)
                 else: pass
-                sleep(0.1)
+                
 
             return min(rightDistanceList)
         else:
