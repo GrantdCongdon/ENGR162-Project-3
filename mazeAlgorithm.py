@@ -599,13 +599,14 @@ def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, s
 bestMove = rankedExplore
 
 def main():
-    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, (3, 0), (5, 6))
+    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, (3, 0), (5, 6))
+    print(f"Battery Voltage: {robot.get_voltage_battery()}")
     northHazard = False
     eastHazard = False
     southHazard = False
     westHazard = False
     # wait for the robot to be touched
-    #while (not robot.getTouch()): pass
+    while (not robot.getTouch()): pass
     
     # print the initial values
     print(f"North: {0}\tEast: {1}\tSouth: {1}\tWest: {1}")
@@ -614,16 +615,11 @@ def main():
     sleep(1)
 
     # move the robot to north to start the maze
-    robot.moveNorth()
+    northWall, eastWall, southWall, westWall = robot.moveNorth()
     
     # loop until the robot exits the maze
     while (not robot.exitedMaze):
         try:
-            # get the walls around the robot
-            northWall = robot.getNorthWall()
-            eastWall = robot.getEastWall()
-            southWall = robot.getSouthWall()
-            westWall = robot.getWestWall()
 
             # get the values of the surrounding cells
             try:  northMapValue = robot.getMazeValue(robot.location[0], robot.location[1]+1)
@@ -654,22 +650,22 @@ def main():
             # execute the move
             if (move == "north"):
                 try:
-                    robot.moveNorth()
+                    northWall, eastWall, southWall, westWall = robot.moveNorth()
                     northHazard = False
                 except robot.Hazard: northHazard = True
             elif (move == "east"):
                 try:
-                    robot.moveEast()
+                    northWall, eastWall, southWall, westWall = robot.moveEast()
                     eastHazard = False
                 except robot.Hazard: eastHazard = True
             elif (move == "south"):
                 try:
-                    robot.moveSouth()
+                    northWall, eastWall, southWall, westWall = robot.moveSouth()
                     southHazard = False
                 except robot.Hazard: southHazard = True
             elif (move == "west"):
                 try:
-                    robot.moveWest()
+                    northWall, eastWall, southWall, westWall = robot.moveWest()
                     westHazard = False
                 except robot.Hazard: westHazard = True
 
