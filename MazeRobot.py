@@ -284,6 +284,32 @@ class MazeRobot(BrickPi3):
             return min(rightDistanceList)
         else:
             return None
+
+    def oneTimeGetDistances(self):
+        frontAlignDistanceList = []
+        rearAlignDistanceList = []
+        frontDistanceList = []
+        rightDistanceList = []
+    
+        while (len(frontAlignDistanceList) < 100): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
+        
+        while (len(rearAlignDistanceList) < 100): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
+        
+        while (len(frontDistanceList) < 100): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
+            
+        rightDistance = None
+        while rightDistance is None:
+            try: rightDistance = self.get_sensor(self.rightDistancePort)
+            except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
+            except (SensorError): continue
+        
+        while (len(rightDistanceList) < 50):
+            d = self.get_sensor(self.rightDistancePort)
+            if (int(d) != 255): rightDistanceList.append(d)
+            else: pass
+            sleep(1)
+
+        return (mean(frontAlignDistanceList), mean(rearAlignDistanceList), mean(frontDistanceList), mean(rightDistanceList))
     
     # returns whether a IR hazard is detected
     def getIrHazard(self):
@@ -305,20 +331,17 @@ class MazeRobot(BrickPi3):
         return self.map
     
     # returns whether a wall is detected in front of the robot
-    def getFrontWall(self):
-        distance = self.getDistances(2)
+    def getFrontWall(self,distance):
         print(f"Front distance: {distance}")
         return (distance <= self.wallDetectThreshold)
     
     # returns whether a wall is detected to the left of the robot
-    def getLeftWall(self):
-        distance = self.getDistances(0)
+    def getLeftWall(self,distance):
         print(f"Left distance: {distance}")
         return (distance <= self.wallDetectThreshold)
     
     # returns whether a wall is detected to the right of the robot
-    def getRightWall(self):
-        distance = self.getDistances(3)
+    def getRightWall(self,distance):
         print(f"Right distance: {distance}")
         return (distance <= self.wallDetectThreshold)
         
