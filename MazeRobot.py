@@ -76,7 +76,7 @@ class MazeRobot(BrickPi3):
     wheelDiameter = 4.2
 
     # define distance of 1 unit
-    unitDistance = 38
+    unitDistance = 37
 
     # defines the default motor speed to go forward at
     motorSpeed = -200
@@ -251,34 +251,36 @@ class MazeRobot(BrickPi3):
         return self.startCoords
 
     # gets the distances measured by each ultrasonic sensor
-    def getDistances(self):
+    def getDistances(self, sensor):
         frontAlignDistanceList = []
         rearAlignDistanceList = []
         frontDistanceList = []
         rightDistanceList = []
-
-        while (len(frontAlignDistanceList) < 50): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
-        frontAlignDistance = median(frontAlignDistanceList)
+        if (sensor == 0):
+            while (len(frontAlignDistanceList) < 50): frontAlignDistanceList.append(gp.ultrasonicRead(self.frontAlignDistanceSensorPort))
+            return median(frontAlignDistanceList)
+        elif (sensor == 1):
+            while (len(rearAlignDistanceList) < 50): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
+            return median(rearAlignDistanceList)
+        elif (sensor == 2):
+            while (len(frontDistanceList) < 50): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
+            return median(frontDistanceList)
+        elif (sensor == 3):
+            rightDistance = None
+            while rightDistance is None:
+                try: rightDistance = self.get_sensor(self.rightDistancePort)
+                except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
+                except (SensorError): continue
         
-        while (len(rearAlignDistanceList) < 50): rearAlignDistanceList.append(gp.ultrasonicRead(self.rearAlignDistanceSensorPort))
-        rearAlignDistance = median(rearAlignDistanceList)
+            while (len(rightDistanceList) < 50):
+                d = self.get_sensor(self.rightDistancePort)
+                if (int(d) != 255): rightDistanceList.append(d)
+                else: pass
+                sleep(0.1)
 
-        while (len(frontDistanceList) < 50): frontDistanceList.append(gp.ultrasonicRead(self.frontDistanceSensorPort))
-        frontDistance = median(frontDistanceList)
-
-        rightDistance = None
-        while rightDistance is None:
-            try: rightDistance = self.get_sensor(self.rightDistancePort)
-            except OSError: self.set_sensor_type(self.rightDistancePort, self.SENSOR_TYPE.EV3_ULTRASONIC_CM)
-            except (SensorError): continue
-        while (len(rightDistanceList) < 5):
-            d = self.get_sensor(self.rightDistancePort)
-            if (int(d) != 255): rightDistanceList.append(d)
-            else: pass
-            sleep(1)
-        rightDistance = mean(rightDistanceList)
-
-        return [frontAlignDistance , rearAlignDistance, frontDistance, rightDistance]
+            return median(rightDistanceList)
+        else:
+            return None
     
     # returns whether a IR hazard is detected
     def getIrHazard(self):
@@ -301,22 +303,22 @@ class MazeRobot(BrickPi3):
     
     # returns whether a wall is detected in front of the robot
     def getFrontWall(self):
-        distance = self.getDistances()[2]
+        distance = self.getDistances(2)
         print(f"Front distance: {distance}")
         return (distance <= self.wallDetectThreshold)
     
     # returns whether a wall is detected to the left of the robot
     def getLeftWall(self):
-        distance = self.getDistances()[0]
+        distance = self.getDistances(0)
         print(f"Left distance: {distance}")
         return (distance <= self.wallDetectThreshold)
     
     # returns whether a wall is detected to the right of the robot
     def getRightWall(self):
-        distance = self.getDistances()[3]
+        distance = self.getDistances(3)
         print(f"Right distance: {distance}")
         return (distance <= self.wallDetectThreshold)
-    
+        
     # returns whether a wall is "north" of the robot
     def getNorthWall(self):
         if (self.orientation==0): return self.getFrontWall()
@@ -408,11 +410,8 @@ class MazeRobot(BrickPi3):
         # while the average encoder reading is less than the distance
         while (averageEncoderReading<self.encoderDistance):
             # get the distances from the ultrasonic sensors
-            distances = self.getDistances()
             try:
-                if (distances[2] <= self.centerDistance):
-                    print(distances[2])
-                    break
+                if (self.getDistances(2) <= self.centerDistance): break
                 
                 # calculate the error for the tilt alignment
                 tiltError = (self.get_sensor(self.gyroPort)[0]-initialGyroValue)*self.wallAlignProportionalGain
@@ -432,8 +431,7 @@ class MazeRobot(BrickPi3):
         
         self.stopMotors()
 
-        distances = self.getDistances()
-        if (distances[0] <= self.wallDetectThreshold and distances[1] <= self.wallDetectThreshold): self.align()
+        if (self.getDistances(0) <= self.wallDetectThreshold and self.getDistances(1) <= self.wallDetectThreshold): self.align()
 
         return
     
@@ -468,8 +466,7 @@ class MazeRobot(BrickPi3):
 
         self.stopMotors()
 
-        distances = self.getDistances()
-        if (distances[0] <= self.wallDetectThreshold and distances[1] <= self.wallDetectThreshold): self.align()
+        if (self.getDistances(0) <= self.wallDetectThreshold and self.getDistances(1) <= self.wallDetectThreshold): self.align()
 
         return
     
@@ -538,27 +535,20 @@ class MazeRobot(BrickPi3):
 
         self.stopMotors()
 
-        distances = self.getDistances()
-        if (distances[0] <= self.wallDetectThreshold and distances[1] <= self.wallDetectThreshold): self.align()
+        if (self.getDistances(0) <= self.wallDetectThreshold and self.getDistances(1) <= self.wallDetectThreshold): self.align()
 
         return
     
     def align(self):
         # get the distances from the ultrasonic sensors
-        distances = self.getDistances()
-        print(f"Alignment Values: {distances[0]}\t{distances[1]}")
-        if (distances[0] < self.wallDetectThreshold and distances[1] < self.wallDetectThreshold):
-            while (distances[0]-distances[1] == -1):
-                # get the distances from the ultrasonic sensors
-                distances = self.getDistances()
-                print(f"Aligning: {distances[0]}\t{distances[1]}")
+        if (self.getDistances(0) < self.wallDetectThreshold and self.getDistances(1) < self.wallDetectThreshold):
+            while (self.getDistances(0)-self.getDistances(1) == -1):
                 # calculate the error for the tilt alignment
-                tiltError = (distances[0] - distances[1])*100
+                tiltError = (self.getDistances(0) - self.getDistances(1))*200
 
                 # set the motor speeds
                 self.setMotorSpeeds(tiltError, -tiltError)
 
-                distances = self.getDistances()
         return
     
     def depositCargo(self):
@@ -588,13 +578,13 @@ class MazeRobot(BrickPi3):
     # moves the robot to the center of the cell
     def moveCenter(self):
         # get the front distance
-        frontDistance = self.getDistances()[2]
+        frontDistance = self.getDistances(2)
         # move the robot to the center of the cell
         if (frontDistance>self.centerDistance):
             while (frontDistance>self.centerDistance):
                 try:
                     self.setMotorSpeeds(self.centerMotorSpeed, self.centerMotorSpeed)
-                    frontDistance = self.getDistances()[2]
+                    frontDistance = self.getDistances(2)
                 except KeyboardInterrupt:
                     self.stopMotors()
                     sleep(0.1)
@@ -604,7 +594,7 @@ class MazeRobot(BrickPi3):
             while (frontDistance<self.centerDistance):
                 try:
                     self.setMotorSpeeds(-1*self.centerMotorSpeed, -1*self.centerMotorSpeed)
-                    frontDistance = self.getDistances()[2]
+                    frontDistance = self.getDistances(2)
                 except KeyboardInterrupt:
                     self.stopMotors()
                     sleep(0.1)

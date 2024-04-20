@@ -619,6 +619,7 @@ def main():
     while (not robot.exitedMaze):
         try:
             # get the walls around the robot
+            walls = robot.getWalls()
             northWall = robot.getNorthWall()
             eastWall = robot.getEastWall()
             southWall = robot.getSouthWall()
