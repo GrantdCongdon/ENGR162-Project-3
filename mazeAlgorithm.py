@@ -599,7 +599,7 @@ def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, s
 bestMove = rankedExplore
 
 def main():
-    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, (3, 0), (5, 6))
+    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, (14,15), MazeRobot.PORT_1, (1, 0), (9, 7))
     print(f"Battery Voltage: {robot.get_voltage_battery()}")
     northHazard = False
     eastHazard = False
@@ -643,38 +643,57 @@ def main():
             print(f"North Map: {northMapValue}\tEast Map: {eastMapValue}\tSouth Map: {southMapValue}\tWest Map:{westMapValue}")
 
             # get the best move
-            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (0, 3))
-            print(f"X-coord: {robot.location[0]}\tY-coord: {robot.location[1]}")
-            print(move)
+            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (6, 6))
+            
+            if move is None:
+                print("Faulty sensor reading")
+                northWall = robot.getNorthWall()
+                eastWall = robot.getEastWall()
+                southWall = robot.getSouthWall()
+                westWall = robot.getWestWall()
+                continue
 
+            print(f"X-coord: {robot.location[0]}\tY-coord: {robot.location[1]}")
+            print(f"Orientation: {robot.orientation}\n")
+            print(move)
+            
+            if (robot.location[0] == 3 and robot.location[1] == 3): move = "south"
+            
             # execute the move
             if (move == "north"):
                 try:
                     northWall, eastWall, southWall, westWall = robot.moveNorth()
                     northHazard = False
-                except robot.Hazard: northHazard = True
+                except robot.Hazard:
+                    if (eastWall and westWall): robot.setMazeValue(robot.location[0], robot.location[1], -1)
+                    northHazard = True
             elif (move == "east"):
                 try:
                     northWall, eastWall, southWall, westWall = robot.moveEast()
                     eastHazard = False
-                except robot.Hazard: eastHazard = True
+                except robot.Hazard:
+                    if (northWall and southWall): robot.setMazeValue(robot.location[0], robot.location[1], -1)
+                    eastHazard = True
             elif (move == "south"):
                 try:
                     northWall, eastWall, southWall, westWall = robot.moveSouth()
                     southHazard = False
-                except robot.Hazard: southHazard = True
+                except robot.Hazard:
+                    if (eastWall and westWall): robot.setMazeValue(robot.location[0], robot.location[1], -1)
+                    southHazard = True
             elif (move == "west"):
                 try:
                     northWall, eastWall, southWall, westWall = robot.moveWest()
                     westHazard = False
-                except robot.Hazard: westHazard = True
+                except robot.Hazard:
+                    if (northWall and southWall): robot.setMazeValue(robot.location[0], robot.location[1], -1)
+                    westHazard = True
 
             if (robot.exitedMaze):
                 robot.moveUnitForward()
                 robot.depositCargo()
                 robot.celebrate()
                 break
-
 
         except KeyboardInterrupt:
             robot.stopMotors()
@@ -686,7 +705,10 @@ def main():
     # print a map of the maze
     map = robot.getMap(37, 0, 40, "cm")
     print(map)
+    print(robot.hazards)
 
+    map.toCSV("map.csv")
+    map.hazardsToCSV("hazards.csv")
     return
 
 if __name__ == "__main__":
