@@ -644,6 +644,15 @@ def main():
 
             # get the best move
             move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (2, 5))
+            
+            if move is None:
+                print("Faulty sensor reading")
+                northWall = robot.getNorthWall()
+                eastWall = robot.getEastWall()
+                southWall = robot.getSouthWall()
+                westWall = robot.getWestWall()
+                continue
+
             print(f"X-coord: {robot.location[0]}\tY-coord: {robot.location[1]}")
             print(move)
 

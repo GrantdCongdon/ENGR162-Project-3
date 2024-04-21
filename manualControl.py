@@ -10,6 +10,7 @@ def main():
             elif command == "a": robot.moveWest()
             elif command == "d": robot.moveEast()
             elif command == "c": robot.depositCargo()
+            elif command == "b": robot.celebrate()
             elif command == "l":
                 commands = [*input("Enter a sequence of commands: ")]
                 for c in commands:
@@ -18,6 +19,11 @@ def main():
                     elif c == "a": robot.moveWest()
                     elif c == "d": robot.moveEast()
                     elif c == "c": robot.depositCargo()
+                    elif c == "b": robot.celebrate()
+                    elif command == "m":
+                        map = robot.getMap(37, 0, 40, "cm")
+                        print(map)
+                        map.toCSV("map.csv")
                     else: print("Invalid command")
             elif command == "m":
                 map = robot.getMap(37, 0, 40, "cm")

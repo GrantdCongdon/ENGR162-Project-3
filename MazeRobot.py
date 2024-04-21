@@ -675,7 +675,8 @@ class MazeRobot(BrickPi3):
     def moveCenter(self):
         print("Centering")
         # move the robot to the center of the cell
-        if (self.getDistances(2)>self.centerDistance):
+        d = self.getDistances(2)
+        if (d > self.centerDistance and d < self.wallDetectThreshold):
             while (self.getDistances(2)>self.centerDistance):
                 try:
                     self.setMotorSpeeds(self.centerMotorSpeed, self.centerMotorSpeed)
@@ -684,7 +685,7 @@ class MazeRobot(BrickPi3):
                     sleep(0.1)
                     self.reset_all()
                     break
-        else:
+        elif (d < self.centerDistance and d < self.wallDetectThreshold):
             while (self.getDistances(2)<self.centerDistance):
                 try:
                     self.setMotorSpeeds(-1*self.centerMotorSpeed, -1*self.centerMotorSpeed)
