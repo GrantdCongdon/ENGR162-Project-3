@@ -1,7 +1,7 @@
 from MazeRobot import MazeRobot
 from time import sleep
 def main():
-    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, (3, 0), (5, 6))
+    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, (14,15), MazeRobot.PORT_1, (2, 0), (5, 7))
     while True:
         try:
             command = input("Enter a command: ")
@@ -32,6 +32,9 @@ def main():
             elif command == "q": raise KeyboardInterrupt
             else: print("Invalid command")
         
+        except robot.Hazard:
+            continue
+
         except KeyboardInterrupt:
             robot.stopMotors()
             sleep(0.1)

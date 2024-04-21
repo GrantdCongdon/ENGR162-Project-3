@@ -4,7 +4,7 @@ from brickpi3 import BrickPi3, SensorError
 from MPU9250 import MPU9250
 from time import sleep, time
 from math import pi
-from statistics import median, stdev
+from statistics import median, mean
 import numpy as np
 
 # class that covers all the aspects of the ENGR161/162 robot
@@ -91,7 +91,7 @@ class MazeRobot(BrickPi3):
     wheelDiameter = 4.2
 
     # define distance of 1 unit
-    unitDistance = 40
+    unitDistance = 39
 
     # defines the default motor speed to go forward at
     motorSpeed = -200
@@ -107,7 +107,7 @@ class MazeRobot(BrickPi3):
     wallAlignProportionalGain = 12
     
     # defines the default threshold for the IR sensor when a hazard is present
-    irHazardThreshold = 30
+    irHazardThreshold = 150
     
     # defines the default threshold for the magnet sensor when hazard is present
     magnetHazardThreshold = 200
@@ -122,10 +122,10 @@ class MazeRobot(BrickPi3):
     wallDistance = 15
 
     # default center distance
-    centerDistance = 10
+    centerDistance = 11
 
     # default threshold for the wall detection
-    wallDetectThreshold = 25
+    wallDetectThreshold = 30
 
     # define 90 degree turn
     squareTurn = 90
@@ -138,10 +138,10 @@ class MazeRobot(BrickPi3):
 
     # intakes the default ports for the motors, ultrasonics, gyro, and IR sensor
     def __init__(self, rightMotorPort: int, leftMotorPort: int, cargoPort: int, swivelPort: int, frontAlignDistanceSensorPort: int, rearAlignDistanceSensorPort: int,
-                 frontDistanceSensorPort: int, rightDistancePort: int, gyroPort: int, irPort: int, touchPort: int, coords: tuple, mazeSize: tuple,
+                 frontDistanceSensorPort: int, rightDistancePort: int, gyroPort: int, irPorts: tuple, touchPort: int, coords: tuple, mazeSize: tuple,
                  orientation=0):
 
-        # initializes the brickpi3, MPU9250, and grovepi
+        # initializes the brickpi3
         super().__init__()
         
         # takes parameters and assigns them to the class
@@ -154,7 +154,8 @@ class MazeRobot(BrickPi3):
         self.frontDistanceSensorPort = frontDistanceSensorPort
         self.rightDistancePort = rightDistancePort
         self.gyroPort = gyroPort
-        self.irPort = irPort
+        self.irPort1 = irPorts[0]
+        self.irPort2 = irPorts[1]
         self.touchPort = touchPort
         self.coords = list(coords)
         self.orientation = orientation
@@ -284,52 +285,39 @@ class MazeRobot(BrickPi3):
         rightDistanceList = []
 
         if (sensor == 0):
-            frontAlignDistanceList = [0, 50, 100]
-            while stdev(frontAlignDistanceList) > 5:
-                frontAlignDistanceList = []
-                while (len(frontAlignDistanceList) < 20):
-                    d = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
-                    if (d != 0 and d!= 255): frontAlignDistanceList.append(d)
-                    sleep(0.01)
-                sleep(0.5)
-            return median(frontAlignDistanceList)
+            while (len(rearAlignDistanceList) < 1):
+                d = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
+                if (d != 0 and d!= 255): rearAlignDistanceList.append(d)
+                sleep(0.05)
+            return median(rearAlignDistanceList)
         
         elif (sensor == 1):
-            rearAlignDistanceList = [0, 50, 100]
-            while stdev(rearAlignDistanceList) > 5:
-                rearAlignDistanceList = []
-                while (len(rearAlignDistanceList) < 20):
-                    d = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
-                    if (d != 0 and d!= 255): rearAlignDistanceList.append(d)
-                    sleep(0.01)
-                sleep(0.5)
-            return median(rearAlignDistanceList)
+            #self.swivel(1)
+            #sleep(0.25)
+            while (len(frontAlignDistanceList) < 1):
+                d = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
+                if (d != 0 and d!= 255 and d != 4): frontAlignDistanceList.append(d)
+                sleep(0.05)
+            print(f"Front Align Distance List: {frontAlignDistanceList}")
+            return median(frontAlignDistanceList)
         
         elif (sensor == 2):
             self.swivel(0)
             sleep(0.25)
-            frontDistanceList = [0, 50, 100]
-            while stdev(frontDistanceList) > 5:
-                frontDistanceList = []
-                while (len(frontDistanceList) < 20):
-                    d = gp.ultrasonicRead(self.frontDistanceSensorPort)
-                    if (d != 0 and d!= 255): frontDistanceList.append(d)
-                    sleep(0.01)
-                sleep(0.5)
+            while (len(frontDistanceList) < 1):
+                d = gp.ultrasonicRead(self.frontDistanceSensorPort)
+                if (d != 0 and d!= 255 and d != 4): frontDistanceList.append(d)
+                sleep(0.01)
+            print(f"Front Distance List: {frontDistanceList}")
             return median(frontDistanceList)
         
         elif (sensor == 3):
-            self.swivel(1)
-            sleep(0.25)
-            rightDistanceList = [0, 50, 100]
-            while stdev(rightDistanceList) > 5:
-                rightDistanceList = []
-                while (len(rightDistanceList) < 20):
-                    d = gp.ultrasonicRead(self.frontDistanceSensorPort)
-                    if (d != 0 and d!= 255): rightDistanceList.append(d)
-                    sleep(0.01)
-                print(rightDistanceList)
-                sleep(0.5)
+            self.swivel(-1)
+            while (len(rightDistanceList) < 1):
+                d = gp.ultrasonicRead(self.frontDistanceSensorPort)
+                if (d != 0 and d!= 255 and d != 4): rightDistanceList.append(d)
+                sleep(0.05)
+            print(f"Right Distance List: {rightDistanceList}")
             return median(rightDistanceList)
         
         else:
@@ -337,7 +325,10 @@ class MazeRobot(BrickPi3):
     
     # returns whether a IR hazard is detected
     def getIrHazard(self):
-        return (gp.analogRead(self.irPort)>=self.irHazardThreshold)
+        ir = gp.analogRead(self.irPort1)
+        ir2 = gp.analogRead(self.irPort2)
+        print(ir, ir2)
+        return [(ir>=self.irHazardThreshold or ir2>=self.irHazardThreshold), mean([ir, ir2])]
 
     # returns whether a magnet hazard is detected
     def getMagnetHazard(self):
@@ -435,15 +426,26 @@ class MazeRobot(BrickPi3):
     def swivel(self, position):
         try:
             if (position == 0):
-                while (abs(self.get_motor_encoder(self.swivelPort)) > 0):
-                    swivelError = self.get_motor_encoder(self.swivelPort) * 5
+                swivelEncoder = self.get_motor_encoder(self.swivelPort)
+                while (abs(swivelEncoder) > 0):
+                    swivelError = (0 - swivelEncoder) * 5
                     swivelError = swivelError if (abs(swivelError) > 20 or swivelError == 0) else 20 * (swivelError / abs(swivelError))
-                    self.set_motor_dps(self.swivelPort, -swivelError)
+                    self.set_motor_dps(self.swivelPort, swivelError)
+                    swivelEncoder = self.get_motor_encoder(self.swivelPort)
             elif (position == 1):
-                while (abs(self.get_motor_encoder(self.swivelPort)) < 95):
-                    swivelError = (abs(self.get_motor_encoder(self.swivelPort) + 95)) * 5
+                swivelEncoder = self.get_motor_encoder(self.swivelPort)
+                while (swivelEncoder < 90):
+                    swivelError = (90 - swivelEncoder) * 5
                     swivelError = swivelError if (abs(swivelError) > 20 or swivelError == 0) else 20 * (swivelError / abs(swivelError))
-                    self.set_motor_dps(self.swivelPort, -swivelError)
+                    self.set_motor_dps(self.swivelPort, swivelError)
+                    swivelEncoder = self.get_motor_encoder(self.swivelPort)
+            elif (position == -1):
+                swivelEncoder = self.get_motor_encoder(self.swivelPort)
+                while (swivelEncoder > -90):
+                    swivelError = (-90 - swivelEncoder) * 5
+                    swivelError = swivelError if (abs(swivelError) > 20 or swivelError == 0) else 20 * (swivelError / abs(swivelError))
+                    self.set_motor_dps(self.swivelPort, swivelError)
+                    swivelEncoder = self.get_motor_encoder(self.swivelPort)
             else: pass
         finally:
             self.set_motor_dps(self.swivelPort, 0)
@@ -493,45 +495,48 @@ class MazeRobot(BrickPi3):
                         # calculate the error for the tilt alignment
                         tiltError = (self.get_sensor(self.gyroPort)-initialGyroValue)*self.wallAlignProportionalGain
                         # set the motor speeds
-                        self.setMotorSpeeds(-self.motorSpeed-tiltError, -self.motorSpeed+tiltError)
+                        self.setMotorSpeeds(-self.motorSpeed+tiltError, -self.motorSpeed-tiltError)
                         
                         # calculate the average encoder reading
                         averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
                                                 self.get_motor_encoder(self.leftMotorPort))/2)
+                    
+                    self.stopMotors()
                     raise self.Hazard("Magnet")
                 
-                if (self.getIrHazard()):
+                if (self.getIrHazard()[0]):
                     if (self.orientation==0):
                         self.setMazeValue(self.coords[0], self.coords[1]+1, 2)
                         self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                            "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": self.getIrHazard()[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
                     elif (self.orientation==1):
                         self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
                         self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                            "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": self.getIrHazard()[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
                     elif (self.orientation==2):
                         self.setMazeValue(self.coords[0], self.coords[1]-1, 2)
                         self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                            "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": self.getIrHazard()[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
                     elif (self.orientation==3):
                         self.setMazeValue(self.coords[0]-1, self.coords[1], 2)
                         self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                            "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": self.getIrHazard()[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
                     while (averageEncoderReading > 0):
                         # calculate the error for the tilt alignment
                         tiltError = (self.get_sensor(self.gyroPort)-initialGyroValue)*self.wallAlignProportionalGain
 
                         # set the motor speeds
-                        self.setMotorSpeeds(-self.motorSpeed-tiltError, -self.motorSpeed+tiltError)
+                        self.setMotorSpeeds(-self.motorSpeed+tiltError, -self.motorSpeed-tiltError)
                         
                         # calculate the average encoder reading
                         averageEncoderReading = abs((self.get_motor_encoder(self.rightMotorPort)+
                                                 self.get_motor_encoder(self.leftMotorPort))/2)
-                        
+
+                    self.stopMotors()
                     raise self.Hazard("IR")
                 
                 # calculate the error for the tilt alignment
@@ -721,15 +726,16 @@ class MazeRobot(BrickPi3):
             # get the distances from the ultrasonic sensors
             d1 = self.getDistances(0)
             d2 = self.getDistances(1)
-            while (d1 - d2 != -1):
+            while (d1 - d2 != 0):
+                #print(f"Rear Align Distance: {d1}\tFront Align Distance: {d2}")
                 # calculate the error for the tilt alignment
-                tiltError = (d1 - (d2+1))*10
+                tiltError = (d1 - (d2))*10
                 tiltError = tiltError if abs(tiltError) > 20 or tiltError == 0 else (20 * tiltError / abs(tiltError))
 
-                if abs(d1 - (d2+1)) <= 1: break
+                if abs(d1 - (d2)) == 0: break
 
                 # set the motor speeds
-                self.setMotorSpeeds(tiltError, -tiltError)
+                self.setMotorSpeeds(-tiltError, tiltError)
 
                 d1 = self.getDistances(0)
                 d2 = self.getDistances(1)
@@ -753,17 +759,17 @@ class MazeRobot(BrickPi3):
         if (self.orientation==0): self.moveUnitForward()
         elif (self.orientation==1):
             self.turn(-self.squareTurn)
-            self.moveUnitForward()
             self.orientation = 0
+            self.moveUnitForward()
         elif (self.orientation==2):
             #self.moveUnitReverse(wallAlign)
             self.turn(self.aboutFace)
-            self.moveUnitForward()
             self.orientation = 0
+            self.moveUnitForward()
         else:
             self.turn(self.squareTurn)
-            self.moveUnitForward()
             self.orientation = 0
+            self.moveUnitForward()
         
         # update the coordinates
         self.coords[1] += 1
@@ -776,6 +782,8 @@ class MazeRobot(BrickPi3):
         eastWall, eastDistance = self.getEastWall()
         southWall, southDistance = self.getSouthWall()
         westWall, westDistance = self.getWestWall()
+
+        print(f"North Wall: {northWall}\tEast Wall: {eastWall}\tSouth Wall: {southWall}\tWest Wall: {westWall}")
         
         # sets a maze value of -1 if there is a wall on all sides or if the cell is not a junction
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
@@ -787,14 +795,6 @@ class MazeRobot(BrickPi3):
         
         # centers the robot in the cell front to back
         if (self.getFrontWall()[0]): self.moveCenter()
-        
-        # check for hazards and walls and update the maze
-        if (self.getIrHazard()):
-            self.setMazeValue(self.coords[0], self.coords[1]+1, 2)
-            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
-                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
-            raise self.Hazard("IR")
 
         return [northWall, eastWall, southWall, westWall]
     
@@ -802,18 +802,18 @@ class MazeRobot(BrickPi3):
     def moveEast(self):
         if (self.orientation==0):
             self.turn(self.squareTurn)
-            self.moveUnitForward()
             self.orientation = 1
+            self.moveUnitForward()
         elif (self.orientation==1): self.moveUnitForward()
         elif (self.orientation==2):
             self.turn(-self.squareTurn)
-            self.moveUnitForward()
             self.orientation = 1
+            self.moveUnitForward()
         else:
             #self.moveUnitReverse(wallAlign)
             self.turn(self.aboutFace)
-            self.moveUnitForward()
             self.orientation = 1
+            self.moveUnitForward()
         
         # update the coordinates
         self.coords[0] += 1
@@ -826,6 +826,8 @@ class MazeRobot(BrickPi3):
         eastWall, eastDistance = self.getEastWall()
         southWall, southDistance = self.getSouthWall()
         westWall, westDistance = self.getWestWall()
+
+        print(f"North Wall: {northWall}\tEast Wall: {eastWall}\tSouth Wall: {southWall}\tWest Wall: {westWall}")
         
         # sets a maze value of -1 if there is a wall on all sides or if the cell is not a junction
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
@@ -838,40 +840,24 @@ class MazeRobot(BrickPi3):
         # centers the robot in the cell front to back
         if (self.getFrontWall()[0]): self.moveCenter()
 
-        # check for hazards and walls and update the maze
-        if (self.getIrHazard()):
-            self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
-            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
-                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
-            raise self.Hazard("IR")
-
         return [northWall, eastWall, southWall, westWall]
     
     # and the south
     def moveSouth(self):
-        # check for hazards and walls and update the maze
-        if (self.getIrHazard()):
-            self.setMazeValue(self.coords[0], self.coords[1]-1, 2)
-            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
-                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
-            raise self.Hazard("IR")
-            
         if (self.orientation==0):
             #self.moveUnitReverse(wallAlign)
             self.turn(self.aboutFace)
-            self.moveUnitForward()
             self.orientation = 2
+            self.moveUnitForward()
         elif (self.orientation==1):
             self.turn(self.squareTurn)
-            self.moveUnitForward()
             self.orientation = 2
+            self.moveUnitForward()
         elif (self.orientation==2): self.moveUnitForward()
         else:
             self.turn(-self.squareTurn)
-            self.moveUnitForward()
             self.orientation = 2
+            self.moveUnitForward()
         
         # update the coordinates
         self.coords[1] -= 1
@@ -884,6 +870,8 @@ class MazeRobot(BrickPi3):
         eastWall, eastDistance = self.getEastWall()
         southWall, southDistance = self.getSouthWall()
         westWall, westDistance = self.getWestWall()
+
+        print(f"North Wall: {northWall}\tEast Wall: {eastWall}\tSouth Wall: {southWall}\tWest Wall: {westWall}")
         
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
             ((eastWall and westWall and southWall) or (eastWall and westWall and self.getMazeValue(self.coords[0], self.coords[1]+1) == -1))):
@@ -895,39 +883,23 @@ class MazeRobot(BrickPi3):
         # centers the robot in the cell front to back
         if (self.getFrontWall()[0]): self.moveCenter()
 
-        # check for hazards and walls and update the maze
-        if (self.getIrHazard()):
-            self.setMazeValue(self.coords[0], self.coords[1]-1, 2)
-            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
-                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
-            raise self.Hazard("IR")
-
         return [northWall, eastWall, southWall, westWall]
     
     # and the west
     def moveWest(self):
-        # check for hazards and walls and update the maze
-        if (self.getIrHazard()):
-            self.setMazeValue(self.coords[0]-1, self.coords[1], 2)
-            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
-                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
-            raise self.Hazard("IR")
-
         if (self.orientation==0):
             self.turn(-self.squareTurn)
-            self.moveUnitForward()
             self.orientation = 3
+            self.moveUnitForward()
         elif (self.orientation==1):
             #self.moveUnitReverse(wallAlign)
             self.turn(self.aboutFace)
-            self.moveUnitForward()
             self.orientation = 3
+            self.moveUnitForward()
         elif (self.orientation==2):
             self.turn(self.squareTurn)
-            self.moveUnitForward()
             self.orientation = 3
+            self.moveUnitForward()
         else: self.moveUnitForward()
         
         # update the coordinates
@@ -941,6 +913,8 @@ class MazeRobot(BrickPi3):
         eastWall, eastDistance = self.getEastWall()
         southWall, southDistance = self.getSouthWall()
         westWall, westDistance = self.getWestWall()
+
+        print(f"North Wall: {northWall}\tEast Wall: {eastWall}\tSouth Wall: {southWall}\tWest Wall: {westWall}")
         
         if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
             ((northWall and southWall and westWall) or (northWall and southWall and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1))):
@@ -952,17 +926,6 @@ class MazeRobot(BrickPi3):
         # centers the robot in the cell front to back
         if (self.getFrontWall()[0]): self.moveCenter()
 
-        # check for hazards and walls and update the maze
-        if (self.getIrHazard()):
-            self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
-            self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                 "Parameter Value": gp.analogRead(self.irPort), "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
-                                 "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
-            raise self.Hazard("IR")
-        elif (self.getMagnetHazard()):
-            
-            raise self.Hazard("Magnet")
-
         return [northWall, eastWall, southWall, westWall]
     
     def celebrate(self):
@@ -970,7 +933,7 @@ class MazeRobot(BrickPi3):
         while (time()-startTime<10):
             self.set_motor_dps(self.rightMotorPort, 360)
             self.set_motor_dps(self.leftMotorPort, -360)
-            self.swivel(0)
+            self.swivel(-1)
             self.swivel(1)
         self.stopMotors()
         sleep(0.1)

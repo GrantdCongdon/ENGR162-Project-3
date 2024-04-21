@@ -40,7 +40,8 @@ def main():
     while True:
         try:
             print(f"Front ultrasonic sensor data: {gp.ultrasonicRead(ULTRASONIC_PORT)}")
-            print(f"IR sensor data: {gp.analogRead(IR_PORT)}")
+            print(f"IR sensor data: {gp.analogRead(14)}")
+            print(f"IR sensor data: {gp.analogRead(15)}")
             print(f"Magnet sensor data: {getIMUData(magOffset)}\n")
             sleep(1)
         except KeyboardInterrupt:
