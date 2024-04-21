@@ -502,7 +502,6 @@ class MazeRobot(BrickPi3):
                     raise self.Hazard("Magnet")
                 
                 if (self.getIrHazard()[0]):
-                    print(self.getIrHazard()[1])
                     if (self.orientation==0):
                         self.setMazeValue(self.coords[0], self.coords[1]+1, 2)
                         self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
