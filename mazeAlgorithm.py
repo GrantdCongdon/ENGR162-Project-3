@@ -599,7 +599,7 @@ def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, s
 bestMove = rankedExplore
 
 def main():
-    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, (1, 0), (5, 3))
+    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, 2, MazeRobot.PORT_1, (2, 0), (5, 7))
     print(f"Battery Voltage: {robot.get_voltage_battery()}")
     northHazard = False
     eastHazard = False
@@ -643,7 +643,7 @@ def main():
             print(f"North Map: {northMapValue}\tEast Map: {eastMapValue}\tSouth Map: {southMapValue}\tWest Map:{westMapValue}")
 
             # get the best move
-            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (4, 0))
+            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (2, 5))
             print(f"X-coord: {robot.location[0]}\tY-coord: {robot.location[1]}")
             print(move)
 

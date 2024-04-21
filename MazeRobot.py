@@ -286,14 +286,14 @@ class MazeRobot(BrickPi3):
         if (sensor == 0):
             while (len(frontAlignDistanceList) < 20):
                 d = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
-                if (d != 0): frontAlignDistanceList.append(d)
+                if (d != 0 and d!= 255): frontAlignDistanceList.append(d)
                 sleep(0.01)
             return median(frontAlignDistanceList)
         
         elif (sensor == 1):
             while (len(rearAlignDistanceList) < 20):
                 d = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
-                if (d != 0): rearAlignDistanceList.append(d)
+                if (d != 0 and d!= 255): rearAlignDistanceList.append(d)
                 sleep(0.01)
             return median(rearAlignDistanceList)
         
@@ -302,7 +302,7 @@ class MazeRobot(BrickPi3):
             sleep(0.25)
             while (len(frontDistanceList) < 20):
                 d = gp.ultrasonicRead(self.frontDistanceSensorPort)
-                if (d != 0): frontDistanceList.append(d)
+                if (d != 0 and d!= 255): frontDistanceList.append(d)
                 sleep(0.01)
             return median(frontDistanceList)
         
@@ -311,8 +311,9 @@ class MazeRobot(BrickPi3):
             sleep(0.25)
             while (len(rightDistanceList) < 20):
                 d = gp.ultrasonicRead(self.frontDistanceSensorPort)
-                if (d != 0): rightDistanceList.append(d)
+                if (d != 0 and d!= 255): rightDistanceList.append(d)
                 sleep(0.01)
+            print(rightDistanceList)
             return median(rightDistanceList)
         
         else:
