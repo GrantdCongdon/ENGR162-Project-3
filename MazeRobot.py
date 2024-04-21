@@ -4,7 +4,7 @@ from brickpi3 import BrickPi3, SensorError
 from MPU9250 import MPU9250
 from time import sleep, time
 from math import pi
-from statistics import median, mean
+from statistics import median, stdev
 import numpy as np
 
 # class that covers all the aspects of the ENGR161/162 robot
@@ -284,36 +284,52 @@ class MazeRobot(BrickPi3):
         rightDistanceList = []
 
         if (sensor == 0):
-            while (len(frontAlignDistanceList) < 20):
-                d = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
-                if (d != 0 and d!= 255): frontAlignDistanceList.append(d)
-                sleep(0.01)
+            frontAlignDistanceList = [0, 50, 100]
+            while stdev(frontAlignDistanceList) > 5:
+                frontAlignDistanceList = []
+                while (len(frontAlignDistanceList) < 20):
+                    d = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
+                    if (d != 0 and d!= 255): frontAlignDistanceList.append(d)
+                    sleep(0.01)
+                sleep(0.5)
             return median(frontAlignDistanceList)
         
         elif (sensor == 1):
-            while (len(rearAlignDistanceList) < 20):
-                d = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
-                if (d != 0 and d!= 255): rearAlignDistanceList.append(d)
-                sleep(0.01)
+            rearAlignDistanceList = [0, 50, 100]
+            while stdev(rearAlignDistanceList) > 5:
+                rearAlignDistanceList = []
+                while (len(rearAlignDistanceList) < 20):
+                    d = gp.ultrasonicRead(self.rearAlignDistanceSensorPort)
+                    if (d != 0 and d!= 255): rearAlignDistanceList.append(d)
+                    sleep(0.01)
+                sleep(0.5)
             return median(rearAlignDistanceList)
         
         elif (sensor == 2):
             self.swivel(0)
             sleep(0.25)
-            while (len(frontDistanceList) < 20):
-                d = gp.ultrasonicRead(self.frontDistanceSensorPort)
-                if (d != 0 and d!= 255): frontDistanceList.append(d)
-                sleep(0.01)
+            frontDistanceList = [0, 50, 100]
+            while stdev(frontDistanceList) > 5:
+                frontDistanceList = []
+                while (len(frontDistanceList) < 20):
+                    d = gp.ultrasonicRead(self.frontDistanceSensorPort)
+                    if (d != 0 and d!= 255): frontDistanceList.append(d)
+                    sleep(0.01)
+                sleep(0.5)
             return median(frontDistanceList)
         
         elif (sensor == 3):
             self.swivel(1)
             sleep(0.25)
-            while (len(rightDistanceList) < 20):
-                d = gp.ultrasonicRead(self.frontDistanceSensorPort)
-                if (d != 0 and d!= 255): rightDistanceList.append(d)
-                sleep(0.01)
-            print(rightDistanceList)
+            rightDistanceList = [0, 50, 100]
+            while stdev(rightDistanceList) > 5:
+                rightDistanceList = []
+                while (len(rightDistanceList) < 20):
+                    d = gp.ultrasonicRead(self.frontDistanceSensorPort)
+                    if (d != 0 and d!= 255): rightDistanceList.append(d)
+                    sleep(0.01)
+                print(rightDistanceList)
+                sleep(0.5)
             return median(rightDistanceList)
         
         else:
