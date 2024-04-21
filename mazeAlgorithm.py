@@ -599,7 +599,7 @@ def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, s
 bestMove = rankedExplore
 
 def main():
-    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, (14,15), MazeRobot.PORT_1, (0, 0), (4, 3))
+    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, (14,15), MazeRobot.PORT_1, (1, 0), (9, 7))
     print(f"Battery Voltage: {robot.get_voltage_battery()}")
     northHazard = False
     eastHazard = False
@@ -643,7 +643,7 @@ def main():
             print(f"North Map: {northMapValue}\tEast Map: {eastMapValue}\tSouth Map: {southMapValue}\tWest Map:{westMapValue}")
 
             # get the best move
-            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (3, 0))
+            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (6, 6))
             
             if move is None:
                 print("Faulty sensor reading")
@@ -654,9 +654,11 @@ def main():
                 continue
 
             print(f"X-coord: {robot.location[0]}\tY-coord: {robot.location[1]}")
-            print(f"Orientation: {robot.orientation}")
+            print(f"Orientation: {robot.orientation}\n")
             print(move)
-
+            
+            if (robot.location[0] == 3 and robot.location[1] == 3): move = "south"
+            
             # execute the move
             if (move == "north"):
                 try:
@@ -704,6 +706,9 @@ def main():
     map = robot.getMap(37, 0, 40, "cm")
     print(map)
     print(robot.hazards)
+
+    map.toCSV("map.csv")
+    map.hazardsToCSV("hazards.csv")
     return
 
 if __name__ == "__main__":
