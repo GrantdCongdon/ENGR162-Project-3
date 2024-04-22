@@ -91,7 +91,7 @@ class MazeRobot(BrickPi3):
     wheelDiameter = 4.2
 
     # define distance of 1 unit
-    unitDistance = 39
+    unitDistance = 40
 
     # defines the default motor speed to go forward at
     motorSpeed = -200
@@ -296,7 +296,7 @@ class MazeRobot(BrickPi3):
             #sleep(0.25)
             while (len(frontAlignDistanceList) < 1):
                 d = gp.ultrasonicRead(self.frontAlignDistanceSensorPort)
-                if (d != 0 and d!= 255 and d != 4): frontAlignDistanceList.append(d)
+                if (d != 0 and d!= 255): frontAlignDistanceList.append(d)
                 sleep(0.05)
             return median(frontAlignDistanceList)
         
@@ -305,7 +305,7 @@ class MazeRobot(BrickPi3):
             sleep(0.5)
             while (len(frontDistanceList) < 1):
                 d = gp.ultrasonicRead(self.frontDistanceSensorPort)
-                if (d != 0 and d!= 255 and d != 4): frontDistanceList.append(d)
+                if (d != 0 and d!= 255): frontDistanceList.append(d)
                 sleep(0.01)
             return median(frontDistanceList)
         
@@ -314,7 +314,7 @@ class MazeRobot(BrickPi3):
             sleep(0.5)
             while (len(rightDistanceList) < 1):
                 d = gp.ultrasonicRead(self.frontDistanceSensorPort)
-                if (d != 0 and d!= 255 and d != 4): rightDistanceList.append(d)
+                if (d != 0 and d!= 255): rightDistanceList.append(d)
                 sleep(0.05)
             return median(rightDistanceList)
         
@@ -559,7 +559,7 @@ class MazeRobot(BrickPi3):
 
         return
     
-    def turn(self, degrees):
+    def turn(self, degrees, align=True):
         
         # get the gyro value
         initialGyroValue = self.get_sensor(self.gyroPort)
@@ -624,7 +624,7 @@ class MazeRobot(BrickPi3):
 
         self.stopMotors()
 
-        if (self.getDistances(0) <= self.wallDetectThreshold and self.getDistances(1) <= self.wallDetectThreshold): self.align(0)
+        if (align and self.getDistances(0) <= self.wallDetectThreshold and self.getDistances(1) <= self.wallDetectThreshold): self.align(0)
         #elif (self.getDistances(3) <= self.wallDetectThreshold): self.align(1)
 
         return
@@ -685,12 +685,11 @@ class MazeRobot(BrickPi3):
     def align(self, sensor):
         if (sensor == 0):
             # get the distances from the ultrasonic sensors
-            """d1 = self.getDistances(0)
             d2 = self.getDistances(1)
-            if (d1 < self.centerDistance+1 or d1 > self.centerDistance-1):
-                self.turn(-90)
+            if (d2 < self.centerDistance-2 or d2 > self.centerDistance+2):
+                self.turn(-90, align=False)
                 self.moveCenter()
-                self.turn(90)"""
+                self.turn(90, align=False)
             
             d1 = self.getDistances(0)
             d2 = self.getDistances(1)
@@ -721,6 +720,49 @@ class MazeRobot(BrickPi3):
         self.stopMotors()
         return
     
+    def checkDeadEnd(self, northWall, eastWall, southWall, westWall):
+        # not south wall
+        if (northWall and eastWall and westWall): return True
+        elif (northWall and eastWall and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1): return True
+        elif (northWall and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and westWall): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and eastWall and westWall): return True
+        elif (northWall and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and eastWall and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and westWall): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and self.getMagnetHazard(self.coords[0]-1, self.coords[1]) == -1): return True
+
+        # not east wall
+        elif (northWall and eastWall and southWall): return True
+        elif (northWall and eastWall and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1): return True
+        elif (northWall and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and southWall): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and eastWall and southWall): return True
+        elif (northWall and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and eastWall and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and southWall): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and self.getMagnetHazard(self.coords[0], self.coords[1]-1) == -1): return True
+
+        # not south wall
+        elif (northWall and southWall and westWall): return True
+        elif (northWall and southWall and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1): return True
+        elif (northWall and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1 and westWall): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and southWall and westWall): return True
+        elif (northWall and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1 and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and southWall and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1 and westWall): return True
+        elif (self.getMazeValue(self.coords[0], self.coords[1]+1) == -1 and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1 and self.getMagnetHazard(self.coords[0]-1, self.coords[1]) == -1): return True
+
+        # not west wall
+        elif (eastWall and southWall and westWall): return True
+        elif (eastWall and southWall and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1): return True
+        elif (eastWall and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1 and westWall): return True
+        elif (self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and southWall and westWall): return True
+        elif (eastWall and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1 and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1): return True
+        elif (self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and southWall and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1): return True
+        elif (self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1 and westWall): return True
+        elif (self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1 and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1 and self.getMagnetHazard(self.coords[0]-1, self.coords[1]) == -1): return True
+
+        else: return False
+
     # moves the robot "north"
     def moveNorth(self):
         # check the orientation and turn/move accordingly
@@ -752,20 +794,7 @@ class MazeRobot(BrickPi3):
         westWall, westDistance = self.getWestWall()
         
         # sets a maze value of -1 if there is a wall on all sides or if the cell is not a junction
-        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            (northWall and eastWall and westWall)):
-            self.setMazeValue(self.coords[0], self.coords[1], -1)
-
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-              (eastWall and westWall and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1)):
-            self.setMazeValue(self.coords[0], self.coords[1], -1)
-
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-              (northWall and eastWall and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1)):
-            self.setMazeValue(self.coords[0], self.coords[1], -1)
-
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-                (northWall and westWall and self.getMazeValue(self.coords[0], self.coords[1]-1) == -1)):
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and self.deadEnd(northWall, eastWall, southWall, westWall)):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
 
         elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
@@ -806,20 +835,7 @@ class MazeRobot(BrickPi3):
         westWall, westDistance = self.getWestWall()
         
         # sets a maze value of -1 if there is a wall on all sides or if the cell is not a junction
-        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            (northWall and southWall and eastWall)):
-            self.setMazeValue(self.coords[0], self.coords[1], -1)
-
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            (northWall and southWall and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1)):
-            self.setMazeValue(self.coords[0], self.coords[1], -1)
-
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            (southWall and eastWall and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1)):
-            self.setMazeValue(self.coords[0], self.coords[1], -1)
-
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            (northWall and eastWall and self.getMazeValue(self.coords[0]-1, self.coords[1]) == -1)):
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and self.deadEnd(northWall, eastWall, southWall, westWall)):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
 
         elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
@@ -859,20 +875,7 @@ class MazeRobot(BrickPi3):
         southWall, southDistance = self.getSouthWall()
         westWall, westDistance = self.getWestWall()
         
-        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            (eastWall and westWall and southWall)):
-            self.setMazeValue(self.coords[0], self.coords[1], -1)
-
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-              (eastWall and westWall and self.getMazeValue(self.coords[0], self.coords[1]+1) == -1)):
-            self.setMazeValue(self.coords[0], self.coords[1], -1)
-        
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-                (eastWall and southWall and self.getMazeValue(self.coords[0], self.coords[1]+1) == -1)):
-            self.setMazeValue(self.coords[0], self.coords[1], -1)
-        
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-                (westWall and southWall and self.getMazeValue(self.coords[0], self.coords[1]+1) == -1)):
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and self.deadEnd(northWall, eastWall, southWall, westWall)):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
 
         elif (self.getMazeValue(self.coords[0], self.coords[1])==0):
@@ -912,20 +915,7 @@ class MazeRobot(BrickPi3):
         southWall, southDistance = self.getSouthWall()
         westWall, westDistance = self.getWestWall()
         
-        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-            (northWall and southWall and westWall)):
-            self.setMazeValue(self.coords[0], self.coords[1], -1)
-        
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-              (northWall and southWall and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1)):
-            self.setMazeValue(self.coords[0], self.coords[1], -1)
-        
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-              (southWall and westWall and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1)):
-                self.setMazeValue(self.coords[0], self.coords[1], -1)
-        
-        elif ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and
-              (northWall and westWall and self.getMazeValue(self.coords[0]+1, self.coords[1]) == -1)):
+        if ((self.getMazeValue(self.coords[0], self.coords[1])!=5 or self.getMazeValue(self.coords[0], self.coords[1])!=4) and self.deadEnd(northWall, eastWall, southWall, westWall)):
             self.setMazeValue(self.coords[0], self.coords[1], -1)
         
         elif (self.getMazeValue(self.coords[0], self.coords[1])==0):

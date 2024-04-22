@@ -599,7 +599,7 @@ def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, s
 bestMove = rankedExplore
 
 def main():
-    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, (14,15), MazeRobot.PORT_1, (1, 0), (9, 7))
+    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, (14,15), MazeRobot.PORT_1, (6, 0), (7, 5))
     print(f"Battery Voltage: {robot.get_voltage_battery()}")
     northHazard = False
     eastHazard = False
@@ -632,10 +632,10 @@ def main():
             except IndexError: westMapValue = None
 
             # treats hazards as walls
-            northMapValue = northMapValue if not northHazard else -1
-            eastMapValue = eastMapValue if not eastHazard else -1
-            southMapValue = southMapValue if not southHazard else -1
-            westMapValue = westMapValue if not westHazard else -1
+            northWall = northWall if not northHazard else True
+            eastWall = eastWall if not eastHazard else True
+            southWall = southWall if not southHazard else True
+            westWall = westWall if not westHazard else True
 
             # tells the user what the robot sees
             print(f"North Wall: {northWall}\tEast Wall: {eastWall}\tSouth Wall: {southWall}\tWest Wall: {westWall}")
@@ -643,7 +643,7 @@ def main():
             print(f"North Map: {northMapValue}\tEast Map: {eastMapValue}\tSouth Map: {southMapValue}\tWest Map:{westMapValue}")
 
             # get the best move
-            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (6, 6))
+            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (0, 4))
             
             if move is None:
                 print("Faulty sensor reading")
@@ -654,10 +654,10 @@ def main():
                 continue
 
             print(f"X-coord: {robot.location[0]}\tY-coord: {robot.location[1]}")
-            print(f"Orientation: {robot.orientation}\n")
-            print(move)
+            print(f"Orientation: {robot.orientation}")
+            print(move+"\n")
             
-            if (robot.location[0] == 3 and robot.location[1] == 3): move = "south"
+            #if (robot.location[0] == 5 and robot.location[1] == 3): move = "south"
             
             # execute the move
             if (move == "north"):
