@@ -687,6 +687,14 @@ class MazeRobot(BrickPi3):
             # get the distances from the ultrasonic sensors
             d1 = self.getDistances(0)
             d2 = self.getDistances(1)
+            if (d1 != self.centerDistance):
+                self.turn(-90)
+                self.moveCenter()
+                self.turn(90)
+            
+            d1 = self.getDistances(0)
+            d2 = self.getDistances(1)
+
             while (d1 - d2 != 0):
                 # calculate the error for the tilt alignment
                 tiltError = (d1 - (d2))*10
