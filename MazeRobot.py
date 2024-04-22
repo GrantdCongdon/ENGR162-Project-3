@@ -687,7 +687,7 @@ class MazeRobot(BrickPi3):
             # get the distances from the ultrasonic sensors
             d1 = self.getDistances(0)
             d2 = self.getDistances(1)
-            if (d1 != self.centerDistance):
+            if (d1 < self.centerDistance+1 or d1 > self.centerDistance-1):
                 self.turn(-90)
                 self.moveCenter()
                 self.turn(90)
