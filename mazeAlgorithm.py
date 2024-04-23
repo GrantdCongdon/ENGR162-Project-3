@@ -599,7 +599,7 @@ def rankedExplore(northWall, eastWall, southWall, westWall, northMap, eastMap, s
 bestMove = rankedExplore
 
 def main():
-    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, (14,15), MazeRobot.PORT_1, (6, 0), (7, 5))
+    robot = MazeRobot(MazeRobot.PORT_D, MazeRobot.PORT_A, MazeRobot.PORT_C, MazeRobot.PORT_B, 6, 8, 4, MazeRobot.PORT_2, MazeRobot.PORT_3, (14,15), MazeRobot.PORT_1, (0, 0), (7, 11))
     print(f"Battery Voltage: {robot.get_voltage_battery()}")
     northHazard = False
     eastHazard = False
@@ -643,7 +643,7 @@ def main():
             print(f"North Map: {northMapValue}\tEast Map: {eastMapValue}\tSouth Map: {southMapValue}\tWest Map:{westMapValue}")
 
             # get the best move
-            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (0, 4))
+            move = bestMove(northWall, eastWall, southWall, westWall, northMapValue, eastMapValue, southMapValue, westMapValue, (robot.location[0], robot.location[1]), (6, 10))
             
             if move is None:
                 print("Faulty sensor reading")
