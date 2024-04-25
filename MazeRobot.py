@@ -336,7 +336,7 @@ class MazeRobot(BrickPi3):
         while (mag==0):
             magnet = self.imu.readMagnet()
             mag = np.linalg.norm([magnet["x"], magnet["y"], magnet["z"]])
-        return (mag>=self.magnetHazardThreshold)
+        return [(mag>=self.magnetHazardThreshold), mag]
     
     # returns the touch sensor
     def getTouch(self):
@@ -466,26 +466,28 @@ class MazeRobot(BrickPi3):
             try:
                 if (self.getDistances(2) <= self.centerDistance): break
 
-                if (self.getMagnetHazard()):
+                magHazard = self.getMagnetHazard()
+
+                if (magHazard[0]):
                     if (self.orientation==0):
                         self.setMazeValue(self.coords[0], self.coords[1]+1, 3)
                         self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
-                                            "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": magHazard[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
                     elif (self.orientation==1):
                         self.setMazeValue(self.coords[0]+1, self.coords[1], 3)
                         self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
-                                            "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": magHazard[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
                     elif (self.orientation==2):
                         self.setMazeValue(self.coords[0], self.coords[1]-1, 3)
                         self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
-                                            "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": magHazard[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
                     elif (self.orientation==3):
                         self.setMazeValue(self.coords[0]-1, self.coords[1], 3)
                         self.hazards.append({"Hazard Type": "Electric/Magnetic Activity Source", "Parameter of Interest": "Field Strength (uT)",
-                                            "Parameter Value": self.imu.readMagnet()["z"], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": magHazard[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
                     
                     while (averageEncoderReading > 0):
@@ -501,27 +503,30 @@ class MazeRobot(BrickPi3):
                     self.stopMotors()
                     raise self.Hazard("Magnet")
                 
-                if (self.getIrHazard()[0]):
+                irHazard = self.getIrHazard()
+                
+                if (irHazard[0]):
                     if (self.orientation==0):
                         self.setMazeValue(self.coords[0], self.coords[1]+1, 2)
                         self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                            "Parameter Value": self.getIrHazard()[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": irHazard[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
                     elif (self.orientation==1):
                         self.setMazeValue(self.coords[0]+1, self.coords[1], 2)
                         self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                            "Parameter Value": self.getIrHazard()[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": irHazard[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
                     elif (self.orientation==2):
                         self.setMazeValue(self.coords[0], self.coords[1]-1, 2)
                         self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                            "Parameter Value": self.getIrHazard()[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": irHazard[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
                     elif (self.orientation==3):
                         self.setMazeValue(self.coords[0]-1, self.coords[1], 2)
                         self.hazards.append({"Hazard Type": "High Temperature Heat Source", "Parameter of Interest": "Radiated Power (W)",
-                                            "Parameter Value": self.getIrHazard()[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
+                                            "Parameter Value": irHazard[1], "Hazard X-Coordinate": self.coords[0]*self.unitDistance,
                                             "Hazard Y-Coordinate": self.coords[1]*self.unitDistance})
+                        
                     while (averageEncoderReading > 0):
                         # calculate the error for the tilt alignment
                         tiltError = (self.get_sensor(self.gyroPort)-initialGyroValue)*self.wallAlignProportionalGain
