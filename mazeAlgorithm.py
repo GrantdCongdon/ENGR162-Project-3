@@ -632,10 +632,10 @@ def main():
             except IndexError: westMapValue = None
 
             # treats hazards as walls
-            northWall = northWall if not northHazard else True
-            eastWall = eastWall if not eastHazard else True
-            southWall = southWall if not southHazard else True
-            westWall = westWall if not westHazard else True
+            northMapValue = northMapValue if not northHazard else -1
+            eastMapValue = eastMapValue if not eastHazard else -1
+            southMapValue = southMapValue if not southHazard else -1
+            westMapValue = westMapValue if not westHazard else -1
 
             # tells the user what the robot sees
             print(f"North Wall: {northWall}\tEast Wall: {eastWall}\tSouth Wall: {southWall}\tWest Wall: {westWall}")
