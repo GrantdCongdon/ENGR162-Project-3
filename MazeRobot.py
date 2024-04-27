@@ -118,9 +118,6 @@ class MazeRobot(BrickPi3):
     # encoder distance to deploy cargo
     cargoEncoderDistance = 200
 
-    # default distance for wall alignment
-    wallDistance = 15
-
     # default center distance
     centerDistance = 9
 
@@ -226,11 +223,6 @@ class MazeRobot(BrickPi3):
     def setUnitDistance(self, distance: float):
         self.unitDistance = distance
         self.encoderDistance = (360/(pi*self.wheelDiameter)) * self.unitDistance
-        return
-    
-    # sets the default distance for wall alignment
-    def setWallDistance(self, distance: int):
-        self.wallDistance = distance
         return
     
     # sets the default center distance
